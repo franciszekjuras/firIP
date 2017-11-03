@@ -31,7 +31,7 @@ module firtap
     );
 
     always @(posedge clk) begin
-        if(reset == 1'b0) begin
+        if(reset == 1'b1) begin
              outX <= 0;
         end else begin
              outX <= inX;

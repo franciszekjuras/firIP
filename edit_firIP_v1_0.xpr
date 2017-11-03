@@ -3,7 +3,7 @@
 <!--                                                         -->
 <!-- Copyright 1986-2017 Xilinx, Inc. All Rights Reserved.   -->
 
-<Project Version="7" Minor="20" Path="/home/franciszek/Documents/fpga/firN_ip/edit_firIP_v1_0.xpr">
+<Project Version="7" Minor="20" Path="/home/franciszek/Documents/fpga/IPs/firN_ip/edit_firIP_v1_0.xpr">
   <DefaultLaunch Dir="$PRUNDIR"/>
   <Configuration>
     <Option Name="Id" Val="ef29a3e3b7bb4028b80948cd645e75c0"/>

@@ -5,11 +5,15 @@ proc init_gui { IPINST } {
   set Page_0 [ipgui::add_page $IPINST -name "Page 0"]
   set C_S00_AXI_DATA_WIDTH [ipgui::add_param $IPINST -name "C_S00_AXI_DATA_WIDTH" -parent ${Page_0} -widget comboBox]
   set_property tooltip {Width of S_AXI data bus} ${C_S00_AXI_DATA_WIDTH}
-  set C_S00_AXI_ADDR_WIDTH [ipgui::add_param $IPINST -name "C_S00_AXI_ADDR_WIDTH" -parent ${Page_0}]
+  set C_S00_AXI_ADDR_WIDTH [ipgui::add_param $IPINST -name "C_S00_AXI_ADDR_WIDTH" -parent ${Page_0} -show_range false]
   set_property tooltip {Width of S_AXI address bus} ${C_S00_AXI_ADDR_WIDTH}
   ipgui::add_param $IPINST -name "C_S00_AXI_BASEADDR" -parent ${Page_0}
   ipgui::add_param $IPINST -name "C_S00_AXI_HIGHADDR" -parent ${Page_0}
 
+  ipgui::add_param $IPINST -name "FIR_DATA_WIDTH"
+  ipgui::add_param $IPINST -name "FIR_COEF_WIDTH"
+  set FIR_DSP_NR [ipgui::add_param $IPINST -name "FIR_DSP_NR"]
+  set_property tooltip {Check in your fpga documentation how many blocks are available} ${FIR_DSP_NR}
 
 }
 
