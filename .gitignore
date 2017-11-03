@@ -1,0 +1,9 @@
+*.sublime-workspace
+edit_firIP_v1_0.*
+!edit_firIP_v1_0.xpr
+firIP_1.0/*
+!firIP_1.0/hdl
+!firIP_1.0/xgui
+!firIP_1.0/component.xml
+!firIP_1.0/user.org_user_firIP_1.0.zip
+*~
