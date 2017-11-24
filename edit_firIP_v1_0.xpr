@@ -67,6 +67,13 @@
           <Attr Name="UsedIn" Val="simulation"/>
         </FileInfo>
       </File>
+      <File Path="$PPRDIR/firIP_1.0/hdl/flag_cross_domain.v">
+        <FileInfo>
+          <Attr Name="UsedIn" Val="synthesis"/>
+          <Attr Name="UsedIn" Val="implementation"/>
+          <Attr Name="UsedIn" Val="simulation"/>
+        </FileInfo>
+      </File>
       <File Path="$PPRDIR/firIP_1.0/hdl/firIP_v1_0.v">
         <FileInfo>
           <Attr Name="UsedIn" Val="synthesis"/>
