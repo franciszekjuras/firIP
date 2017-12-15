@@ -3,13 +3,17 @@
 module firtap
     #(parameter XW = 25, COEFW = 18, OUTW = 48) //max parameters
     (
-    input wire clk, reset,
+    input wire clk,
     input wire [XW-1:0] inX,
-    output reg [XW-1:0] outX,
+    output wire [XW-1:0] outX,
     input wire [COEFW-1:0] inCoef,
     input wire [OUTW-1:0] acc,
     output wire [OUTW-1:0] out
     );
+    wire [OUTW-1:0] sum;
+
+    shiftby #(.BY(2),.WIDTH(XW)) shiftX (.in(inX), .out(outX), .clk(clk));
+    shiftby #(.BY(3-2),.WIDTH(XW)) shiftS (.in(sum), .out(out), .clk(clk)); // -2 because of internal sum latency
     
     MACC_MACRO #(
     .DEVICE("7SERIES"),
@@ -27,14 +31,7 @@ module firtap
     .CLK(clk),
     .LOAD(1'b1),
     .LOAD_DATA(acc),
-    .RST(reset)
+    .RST(1'b0)
     );
 
-    always @(posedge clk) begin
-        if(reset == 1'b1) begin
-             outX <= 0;
-        end else begin
-             outX <= inX;
-        end
-    end
 endmodule

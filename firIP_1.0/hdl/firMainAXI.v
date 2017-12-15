@@ -7,15 +7,11 @@
 		parameter FIR_DATA_WIDTH = 32,
 		parameter FIR_COEF_WIDTH = 18,
 		parameter FIR_COEF_MAG = 16,
-        parameter FIR_DSP_NR = 32, //TODO: set this value as an axi read register
-		// User parameters ends
-		// Do not modify the parameters beyond this line
-		// modified lol
+        parameter FIR_DSP_NR = 32, 
+        // User parmaters end
 
-		// Width of S_AXI data bus
 		parameter integer C_S_AXI_DATA_WIDTH	= 32,
-		// Width of S_AXI address bus
-		parameter integer C_S_AXI_ADDR_WIDTH	= 16//TODO: fit to needs
+		parameter integer C_S_AXI_ADDR_WIDTH	= 16
     )
 	(
 		// Users to add ports here
@@ -24,89 +20,48 @@
         output reg [FIR_DATA_WIDTH-1 : 0] fir_out,
         output wire [7:0] leds_out,
 		// User ports ends
-		// Do not modify the ports beyond this line
-
-		// Global Clock Signal
+		
 		input wire  S_AXI_ACLK,
-		// Global Reset Signal. This Signal is Active LOW
 		input wire  S_AXI_ARESETN,
-		// Write address (issued by master, acceped by Slave)
 		input wire [C_S_AXI_ADDR_WIDTH-1 : 0] S_AXI_AWADDR,
-		// Write channel Protection type. This signal indicates the
-    		// privilege and security level of the transaction, and whether
-    		// the transaction is a data access or an instruction access.
 		input wire [2 : 0] S_AXI_AWPROT,
-		// Write address valid. This signal indicates that the master signaling
-    		// valid write address and control information.
 		input wire  S_AXI_AWVALID,
-		// Write address ready. This signal indicates that the slave is ready
-    		// to accept an address and associated control signals.
 		output wire  S_AXI_AWREADY,
-		// Write data (issued by master, acceped by Slave) 
 		input wire [C_S_AXI_DATA_WIDTH-1 : 0] S_AXI_WDATA,
-		// Write strobes. This signal indicates which byte lanes hold
-    		// valid data. There is one write strobe bit for each eight
-    		// bits of the write data bus.    
 		input wire [(C_S_AXI_DATA_WIDTH/8)-1 : 0] S_AXI_WSTRB,
-		// Write valid. This signal indicates that valid write
-    		// data and strobes are available.
 		input wire  S_AXI_WVALID,
-		// Write ready. This signal indicates that the slave
-    		// can accept the write data.
 		output wire  S_AXI_WREADY,
-		// Write response. This signal indicates the status
-    		// of the write transaction.
 		output wire [1 : 0] S_AXI_BRESP,
-		// Write response valid. This signal indicates that the channel
-    		// is signaling a valid write response.
 		output wire  S_AXI_BVALID,
-		// Response ready. This signal indicates that the master
-    		// can accept a write response.
 		input wire  S_AXI_BREADY,
-		// Read address (issued by master, acceped by Slave)
 		input wire [C_S_AXI_ADDR_WIDTH-1 : 0] S_AXI_ARADDR,
-		// Protection type. This signal indicates the privilege
-    		// and security level of the transaction, and whether the
-    		// transaction is a data access or an instruction access.
 		input wire [2 : 0] S_AXI_ARPROT,
-		// Read address valid. This signal indicates that the channel
-    		// is signaling valid read address and control information.
 		input wire  S_AXI_ARVALID,
-		// Read address ready. This signal indicates that the slave is
-    		// ready to accept an address and associated control signals.
 		output wire  S_AXI_ARREADY,
-		// Read data (issued by slave)
 		output wire [C_S_AXI_DATA_WIDTH-1 : 0] S_AXI_RDATA,
-		// Read response. This signal indicates the status of the
-    		// read transfer.
 		output wire [1 : 0] S_AXI_RRESP,
-		// Read valid. This signal indicates that the channel is
-    		// signaling the required read data.
 		output wire  S_AXI_RVALID,
-		// Read ready. This signal indicates that the master can
-    		// accept the read data and response information.
 		input wire  S_AXI_RREADY
 	);
     
     // local parameter for addressing 32 bit / 64 bit C_S_AXI_DATA_WIDTH
 	// ADDR_LSB is used for addressing 32/64 bit registers/memories
-	// ADDR_LSB = 2 for 32 bits (n downto 2)
-	// ADDR_LSB = 3 for 64 bits (n downto 3)
+	// ADDR_LSB = 2 for 32 bits addressing
+	// ADDR_LSB = 3 for 64 bits addressing
 
     localparam ADDR_LSB = (C_S_AXI_DATA_WIDTH/32) + 1;
 	// Addresses' bases in 32/64 bit addressing
 	localparam FIR_OFFSET_COEFS = 8;
 	localparam FIR_OFFSET_SAMPLES = 128;
 	//reverse order xD
-	localparam PROG_NAME = "NRIF";
-	localparam PROG_VER = "2b0";
+	localparam PROG_NAME = "_RIF";
+	localparam PROG_VER = "2MT";
 
 	//Switches:
 	localparam SWITCH_CON_EST = 0;
 	localparam SWITCH_FIR_EN = 1;
 	localparam SWITCH_FIR_UPDATE = 2;
-	//Debug switches
-	localparam SWITCH_FIR_TRIGGER = 16;
+	//Debug switches:
 
 	integer idx;
 
@@ -148,240 +103,113 @@
 /*6*/    //reg [C_S_AXI_DATA_WIDTH-1 : 0] unused;
 /*7*/    //reg [C_S_AXI_DATA_WIDTH-1 : 0] unused;
 
-
-
-
 	reg signed [FIR_COEF_WIDTH-1 : 0] coefs [FIR_DSP_NR-1 : 0];
-	reg signed [FIR_COEF_WIDTH-1 : 0] coefs_FC [FIR_DSP_NR-1 : 0];
-	always @(posedge fir_clk) begin
-    	for(idx=0; idx < FIR_DSP_NR; idx=idx+1)begin
-			coefs_FC[idx] <= coefs[idx];
-		end
-	end
 
-	reg signed [FIR_DATA_WIDTH-1 : 0] samplesF [FIR_DSP_NR-1 : 0];
-	reg signed [FIR_DATA_WIDTH-1 : 0] samples [FIR_DSP_NR-1 : 0];
-
-	// Implement axi_awready generation
-	// axi_awready is asserted for one S_AXI_ACLK clock cycle when both
-	// S_AXI_AWVALID and S_AXI_WVALID are asserted. axi_awready is
-	// de-asserted when reset is low.
-	always @( posedge S_AXI_ACLK )
-	begin
-	  if ( S_AXI_ARESETN == 1'b0 )
-	    begin
+	/*Dozen of boring AXI4-lite procedures*/
+	always @( posedge S_AXI_ACLK ) begin
+	  if ( S_AXI_ARESETN == 1'b0 ) begin
 	      axi_awready <= 1'b0;
 	      aw_en <= 1'b1;
-	    end 
-	  else
-	    begin    
-	      if (~axi_awready && S_AXI_AWVALID && S_AXI_WVALID && aw_en)
-	        begin
-	          // slave is ready to accept write address when 
-	          // there is a valid write address and write data
-	          // on the write address and data bus. This design 
-	          // expects no outstanding transactions. 
+	    end else begin    
+	      if (~axi_awready && S_AXI_AWVALID && S_AXI_WVALID && aw_en) begin
 	          axi_awready <= 1'b1;
 	          aw_en <= 1'b0;
-	        end
-	        else if (S_AXI_BREADY && axi_bvalid)
-	            begin
-	              aw_en <= 1'b1;
-	              axi_awready <= 1'b0;
-	            end
-	      	else           
-	        begin
-	          axi_awready <= 1'b0;
+	        end else if (S_AXI_BREADY && axi_bvalid) begin
+				aw_en <= 1'b1;
+				axi_awready <= 1'b0;
+	        end else begin
+	          	axi_awready <= 1'b0;
 	        end
 	    end 
 	end       
 
-	// Implement axi_awaddr latching
-	// This process is used to latch the address when both 
-	// S_AXI_AWVALID and S_AXI_WVALID are valid. 
-	always @( posedge S_AXI_ACLK )
-	begin
-	  if ( S_AXI_ARESETN == 1'b0 )
-	    begin
-	      axi_awaddr <= 0;
-	    end 
-	  else
-	    begin    
-	      if (~axi_awready && S_AXI_AWVALID && S_AXI_WVALID && aw_en)
-	        begin
-	          // Write Address latching 
-	          axi_awaddr <= S_AXI_AWADDR[C_S_AXI_ADDR_WIDTH-1 : ADDR_LSB];
-	        end
+	always @( posedge S_AXI_ACLK )begin
+	  	if ( S_AXI_ARESETN == 1'b0 )
+	      	axi_awaddr <= 0;
+	   	else begin    
+	      	if (~axi_awready && S_AXI_AWVALID && S_AXI_WVALID && aw_en)
+	         	axi_awaddr <= S_AXI_AWADDR[C_S_AXI_ADDR_WIDTH-1 : ADDR_LSB];
 	    end 
 	end       
 
-	// Implement axi_wready generation
-	// axi_wready is asserted for one S_AXI_ACLK clock cycle when both
-	// S_AXI_AWVALID and S_AXI_WVALID are asserted. axi_wready is 
-	// de-asserted when reset is low.
-	always @( posedge S_AXI_ACLK )
-	begin
-	  if ( S_AXI_ARESETN == 1'b0 )
-	    begin
-	      axi_wready <= 1'b0;
-	    end 
-	  else
-	    begin    
-	      if (~axi_wready && S_AXI_WVALID && S_AXI_AWVALID && aw_en )
-	        begin
-	          // slave is ready to accept write data when 
-	          // there is a valid write address and write data
-	          // on the write address and data bus. This design 
-	          // expects no outstanding transactions. 
-	          axi_wready <= 1'b1;
-	        end
-	      else
-	        begin
-	          axi_wready <= 1'b0;
-	        end
+	always @( posedge S_AXI_ACLK )begin
+	  	if ( S_AXI_ARESETN == 1'b0 )
+	      	axi_wready <= 1'b0;
+	  	else begin    
+	      	if (~axi_wready && S_AXI_WVALID && S_AXI_AWVALID && aw_en) 
+	          	axi_wready <= 1'b1;
+	      	else
+	          	axi_wready <= 1'b0;
 	    end 
 	end       
 
-	// Implement memory mapped register select and write logic generation
-	// The write data is accepted and written to memory mapped registers when
-	// axi_awready, S_AXI_WVALID, axi_wready and S_AXI_WVALID are asserted. Write strobes are used to
-	// select byte enables of slave registers while writing.
-	// These registers are cleared when reset (active low) is applied.
-	// Slave register write enable is asserted when valid address and data are available
-	// and the slave is ready to accept the write address and write data.
 	assign reg_wren = axi_wready && S_AXI_WVALID && axi_awready && S_AXI_AWVALID;
 
-	always @( posedge S_AXI_ACLK )
-	begin: write_data
-	  if ( S_AXI_ARESETN == 1'b0 ) //TODO: change to zynq reset
-	    begin
-	    	//TODO: think about resetting registers
-			//switches <= 0;
-			//coefs_crr_nr <= 0;
+	//-----------------------------------------------------//
+	//--------------------WRITE MAPPING--------------------//
+	//-----------------------------------------------------//
 
-	      	//for(idx = 0; idx < FIR_DSP_NR; idx = idx + 1) begin
-	      	//	coefs[idx] <= 0;
-	      	//end
-	    end 
-	  else begin
-	    if (reg_wren & S_AXI_ARESETN)
-	      begin
-	      	for(idx = 0; idx < FIR_DSP_NR; idx = idx + 1) begin
-	      		if(idx + FIR_OFFSET_COEFS == axi_awaddr) begin
-	      			coefs[idx] <= {S_AXI_WDATA[FIR_COEF_WIDTH-1],S_AXI_WDATA[FIR_COEF_WIDTH-2 : 0]};
-	      		end
-	      	end
+	always @( posedge S_AXI_ACLK ) begin: write_data
+		if (reg_wren & S_AXI_ARESETN) begin
+			for(idx = 0; idx < FIR_DSP_NR; idx = idx + 1) begin
+				if(idx + FIR_OFFSET_COEFS == axi_awaddr)
+					coefs[idx] <= {S_AXI_WDATA[C_S_AXI_DATA_WIDTH-1],S_AXI_WDATA[FIR_COEF_WIDTH-2 : 0]};
+			end
 
-	      	case(axi_awaddr)
-	      		4: switches <= S_AXI_WDATA;
-	      		5: coefs_crr_nr <= S_AXI_WDATA;
-	      		//6: unused <= S_AXI_WDATA;
-	      		//7: unused <= S_AXI_WDATA;
-	      	endcase
-
-	      end
-	  end
+			case(axi_awaddr)
+				4: switches <= S_AXI_WDATA;
+				5: coefs_crr_nr <= S_AXI_WDATA;
+				//6: unused <= S_AXI_WDATA;
+				//7: unused <= S_AXI_WDATA;
+			endcase
+		end
 	end    
 
-	// Implement write response logic generation
-	// The write response and response valid signals are asserted by the slave 
-	// when axi_wready, S_AXI_WVALID, axi_wready and S_AXI_WVALID are asserted.  
-	// This marks the acceptance of address and indicates the status of 
-	// write transaction.
-	always @( posedge S_AXI_ACLK )
-	begin
-	  if ( S_AXI_ARESETN == 1'b0 )
-	    begin
-	      axi_bvalid  <= 0;
-	      axi_bresp   <= 2'b0;
-	    end 
-	  else
-	    begin    
-	      if (axi_awready && S_AXI_AWVALID && ~axi_bvalid && axi_wready && S_AXI_WVALID)
-	        begin
-	          // indicates a valid write response is available
-	          axi_bvalid <= 1'b1;
-	          axi_bresp  <= 2'b0; // 'OKAY' response 
-	        end                   // work error responses in future
-	      else
-	        begin
-	          if (S_AXI_BREADY && axi_bvalid) 
-	            //check if bready is asserted while bvalid is high) 
-	            //(there is a possibility that bready is always asserted high)   
-	            begin
-	              axi_bvalid <= 1'b0; 
-	            end  
-	        end
-	    end
+	always @( posedge S_AXI_ACLK ) begin
+		if ( S_AXI_ARESETN == 1'b0 ) begin
+			axi_bvalid  <= 0;
+			axi_bresp   <= 2'b0;
+		end else begin    
+			if (axi_awready && S_AXI_AWVALID && ~axi_bvalid && axi_wready && S_AXI_WVALID) begin
+				axi_bvalid <= 1'b1;
+				axi_bresp  <= 2'b0; // 'OKAY' response 
+			end else begin
+			  	if (S_AXI_BREADY && axi_bvalid)
+			      	axi_bvalid <= 1'b0; 
+			end
+		end
 	end   
 
-	// Implement axi_arready generation
-	// axi_arready is asserted for one S_AXI_ACLK clock cycle when
-	// S_AXI_ARVALID is asserted. axi_awready is 
-	// de-asserted when reset (active low) is asserted. 
-	// The read address is also latched when S_AXI_ARVALID is 
-	// asserted. axi_araddr is reset to zero on reset assertion.
-	always @( posedge S_AXI_ACLK )
-	begin
-	  if ( S_AXI_ARESETN == 1'b0 )
-	    begin
-	      axi_arready <= 1'b0;
-	      axi_araddr  <= 32'b0;
-	    end 
-	  else
-	    begin    
-	      if (~axi_arready && S_AXI_ARVALID)
-	        begin
-	          // indicates that the slave has acceped the valid read address
-	          axi_arready <= 1'b1;
-	          // Read address latching
-	          axi_araddr  <= S_AXI_ARADDR[C_S_AXI_ADDR_WIDTH-1 : ADDR_LSB];
-	        end
-	      else
-	        begin
-	          axi_arready <= 1'b0;
+	always @( posedge S_AXI_ACLK ) begin
+	  	if ( S_AXI_ARESETN == 1'b0 ) begin
+	      	axi_arready <= 1'b0;
+	      	axi_araddr  <= 32'b0;
+	    end else begin    
+	      	if (~axi_arready && S_AXI_ARVALID) begin
+	          	axi_arready <= 1'b1;
+	          	axi_araddr  <= S_AXI_ARADDR[C_S_AXI_ADDR_WIDTH-1 : ADDR_LSB];
+	        end else begin
+	          	axi_arready <= 1'b0;
 	        end
 	    end 
-	end       
+	end
 
-	// Implement axi_arvalid generation
-	// axi_rvalid is asserted for one S_AXI_ACLK clock cycle when both 
-	// S_AXI_ARVALID and axi_arready are asserted. The slave registers 
-	// data are available on the axi_rdata bus at this instance. The 
-	// assertion of axi_rvalid marks the validity of read data on the 
-	// bus and axi_rresp indicates the status of read transaction.axi_rvalid 
-	// is deasserted on reset (active low). axi_rresp and axi_rdata are 
-	// cleared to zero on reset (active low).  
-
-	always @( posedge S_AXI_ACLK )
-	begin
-	  if ( S_AXI_ARESETN == 1'b0 )
-	    begin
-	      axi_rvalid <= 0;
-	      axi_rresp  <= 0;
-	    end 
-	  else
-	    begin    
-	      if (axi_arready && S_AXI_ARVALID && ~axi_rvalid)
-	        begin
-	          // Valid read data is available at the read data bus
-	          axi_rvalid <= 1'b1;
-	          axi_rresp  <= 2'b0; // 'OKAY' response
-	        end   
-	      else if (axi_rvalid && S_AXI_RREADY)
-	        begin
-	          // Read data is accepted by the master
+	always @( posedge S_AXI_ACLK ) begin
+	  	if ( S_AXI_ARESETN == 1'b0 ) begin
+	      	axi_rvalid <= 0;
+	      	axi_rresp  <= 0;
+	    end else begin    
+	      	if (axi_arready && S_AXI_ARVALID && ~axi_rvalid) begin
+	          	axi_rvalid <= 1'b1;
+	          	axi_rresp  <= 2'b0; // 'OKAY' response
+	        end else if (axi_rvalid && S_AXI_RREADY) begin
 	          axi_rvalid <= 1'b0;
 	        end                
 	    end
-	end    
-
-	// Implement memory mapped register select and read logic generation
-	// Slave register read enable is asserted when valid address is available
-	// and the slave is ready to accept the read address.
+	end 
 
 	//-----------------------------------------------------//
-	//---------------------WYBOR ADRESU--------------------//
+	//---------------------READ MAPPING--------------------//
 	//-----------------------------------------------------//
 
 	assign reg_rden = axi_arready & S_AXI_ARVALID & ~axi_rvalid;
@@ -399,48 +227,29 @@
 		// 7 : reg_data_out = unused;
 		default : reg_data_out = 0;
 		endcase
-
-		for(idx = 0; idx < FIR_DSP_NR; idx = idx + 1) begin
-			if(idx + FIR_OFFSET_COEFS == axi_araddr) begin
-				reg_data_out = coefs[idx]; //WARN:sign bit might not be shifted properly
-			end
-		end	   
-		for(idx = 0; idx < FIR_DSP_NR; idx = idx + 1) begin
-			if(idx + FIR_OFFSET_SAMPLES == axi_araddr) begin
-				reg_data_out = samples[idx]; //WARN:sign bit might not be shifted properly
-			end
-		end	   
+		/*IF COEFS STATUS IS NECESSARY*/
+		// for(idx = 0; idx < FIR_DSP_NR; idx = idx + 1) begin
+		// 	if(idx + FIR_OFFSET_COEFS == axi_araddr) begin
+		// 		reg_data_out = coefs[idx]; //WARN:sign bit might not be shifted properly
+		// 	end
+		// end	   
 	end
 
-	//-----------------------------------------------------//
-	//-------------WRZUCENIE DANYCH NA BUS-----------------//
-	//-----------------------------------------------------//
-	always @( posedge S_AXI_ACLK )
-	begin
-	  if ( S_AXI_ARESETN == 1'b0 )
-	    begin
-	      axi_rdata  <= 0;
-	    end 
-	  else
-	    begin    
-	      // When there is a valid read address (S_AXI_ARVALID) with 
-	      // acceptance of read address by the slave (axi_arready), 
-	      // output the read data 
-	      if (reg_rden)
-	        begin
+	always @( posedge S_AXI_ACLK ) begin
+	  	if ( S_AXI_ARESETN == 1'b0 ) begin
+	      	axi_rdata  <= 0;
+	    end else begin 
+	      	if (reg_rden)
 	        	axi_rdata <= reg_data_out;
-	        end   
 	    end
 	end    
 
 	//-----------------------------------------------------//
-	//--------------------LOGIKA UKLADU--------------------//
+	//------------------------LOGIC------------------------//
 	//-----------------------------------------------------//
 
 	//Combinational
 	assign leds_out[7:0] = switches[7:0];
-	wire trigger;
-	assign trigger = switches[SWITCH_FIR_TRIGGER];
 	/////////////
 
 	localparam SUM_WIDTH = FIR_DATA_WIDTH + FIR_COEF_MAG; /*at the end, sum is shortened by COEFMAG to XW length,
@@ -453,7 +262,6 @@
     assign dsp_con_x[0] = fir_in;//input pipeline beginning
 
     always @(posedge fir_clk) begin
-    	//TODO: set proper fir_en
     	if(switches[SWITCH_FIR_EN] == 1'b0) begin
     		fir_out <= fir_in;
     	end else begin
@@ -462,9 +270,8 @@
     		//same as [FIR_COEF_MAG + FIR_DATA_WIDTH - 1 : FIR_COEF_MAG] 
     	end
     end
-
-
-
+    // Generating fir taps (DSP blocks + shifting registers) -- whole magic is performed in taps,
+    // all that must be done outside is proper wiring.
     genvar k; 
     generate
     	for(k = 0; k < FIR_DSP_NR; k = k + 1) begin
@@ -474,72 +281,15 @@
     		.OUTW(SUM_WIDTH)
     		) inst_tap(
     		.clk(fir_clk),
-    		.reset(1'b0), //TODO: set proper reset
     		.inX(dsp_con_x[k]),
     		.outX(dsp_con_x[k+1]),
-    		.inCoef(coefs_FC[k]),
+    		.inCoef(coefs[k]),
     		.acc(dsp_con_sum[k]),
-    		.out(dsp_con_sum[k+1])//TODO: add fir_en
+    		.out(dsp_con_sum[k+1])
     		);
     	end
     endgenerate
 
-    ////////////////////
-    //Sampling
-    reg sample_en, triggerdA;
-    wire triggerdF; //fir_clock domain
-    wire sample_busy, sample_busy_fall;
-    reg [2:0] sample_busy_reg; //one more delay for less strained constraints
-    always @( posedge S_AXI_ACLK ) begin
-    	sample_busy_reg <= {sample_busy_reg[2],sample_busy_reg[1], sample_busy_reg[0], sample_busy};
-    end
-    assign sample_busy_fall = (sample_busy_reg[2]==1'b1 && sample_busy_reg[3]==1'b0);//
-
-    //trigger from PS
-    always @( posedge S_AXI_ACLK ) begin
-    	if ( S_AXI_ARESETN == 1'b0 ) begin
-    		sample_en <= 0;
-	    end 
-	    else begin
-	    	if(!trigger && !sample_en) begin
-	    		sample_en <= 1'b1;
-	    	end
-	    	else if(trigger && sample_en && !triggerdA) begin
-	    		sample_en <= 1'b0;
-	    		triggerdA <= 1'b1;
-	    	end
-	    	if(triggerdA) begin
-	    		triggerdA <= 1'b0;
-	    	end
-	    end
-    end
-
-    //cross to fir_clock
-    flag_cross_domain trig_cross_inst(
-    .CA(S_AXI_ACLK),
-    .FA(triggerdA),
-    .CB(fir_clk),
-    .FB(triggerdF),
-    .BusyA(sample_busy)
-    );
-    //samples are freezed at trigger
-    always @(posedge fir_clk) begin
-    	if(triggerdF) begin
-	    	for(idx=0; idx < FIR_DSP_NR; idx=idx+1)begin
-				samplesF[idx] <= dsp_con_x[idx];
-			end
-		end
-    end
-
-    //back to axi clock
-    //freezed samples are crossed beetween domains
-    always @(posedge S_AXI_ACLK) begin
-    	if(sample_busy_fall) begin
-    		for(idx=0; idx < FIR_DSP_NR; idx=idx+1)begin
-			samples[idx] <= samplesF[idx]; //DOMAIN CROSS
-			end
-    	end
-    end
 
     /////////////////////
 
