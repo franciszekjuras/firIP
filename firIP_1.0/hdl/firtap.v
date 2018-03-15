@@ -22,7 +22,7 @@ module firtap
     .WIDTH_B(COEFW),
     .WIDTH_P(OUTW)
     ) macc_inst (
-    .P(out),
+    .P(sum),
     .A(inX),
     .ADDSUB(1'b1),
     .B(inCoef),

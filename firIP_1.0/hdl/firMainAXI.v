@@ -262,12 +262,12 @@
     assign dsp_con_x[0] = fir_in;//input pipeline beginning
 
     always @(posedge fir_clk) begin
-    	if(switches[SWITCH_FIR_EN] == 1'b0) begin
-    		fir_out <= fir_in;
+    	if(switches[SWITCH_FIR_EN] == 1'b1) begin
+			fir_out[FIR_DATA_WIDTH-1:0] <= dsp_con_sum[FIR_DSP_NR][SUM_WIDTH-1: SUM_WIDTH - FIR_DATA_WIDTH]; 
+			//output shift by coefficients' magnitude
+			//same as [FIR_COEF_MAG + FIR_DATA_WIDTH - 1 : FIR_COEF_MAG] 
     	end else begin
-    		fir_out[FIR_DATA_WIDTH-1:0] <= dsp_con_sum[FIR_DSP_NR][SUM_WIDTH-1: SUM_WIDTH - FIR_DATA_WIDTH]; 
-    		//output shift by coefficients' magnitude
-    		//same as [FIR_COEF_MAG + FIR_DATA_WIDTH - 1 : FIR_COEF_MAG] 
+			fir_out <= fir_in;
     	end
     end
     // Generating fir taps (DSP blocks + shifting registers) -- whole magic is performed in taps,
