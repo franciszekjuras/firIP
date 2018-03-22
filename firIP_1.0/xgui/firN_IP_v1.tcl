@@ -17,6 +17,15 @@ proc init_gui { IPINST } {
 
 }
 
+proc update_PARAM_VALUE.FIR_COEF_MAG { PARAM_VALUE.FIR_COEF_MAG } {
+	# Procedure called to update FIR_COEF_MAG when any of the dependent parameters in the arguments change
+}
+
+proc validate_PARAM_VALUE.FIR_COEF_MAG { PARAM_VALUE.FIR_COEF_MAG } {
+	# Procedure called to validate FIR_COEF_MAG
+	return true
+}
+
 proc update_PARAM_VALUE.FIR_COEF_WIDTH { PARAM_VALUE.FIR_COEF_WIDTH } {
 	# Procedure called to update FIR_COEF_WIDTH when any of the dependent parameters in the arguments change
 }
@@ -41,6 +50,15 @@ proc update_PARAM_VALUE.FIR_DSP_NR { PARAM_VALUE.FIR_DSP_NR } {
 
 proc validate_PARAM_VALUE.FIR_DSP_NR { PARAM_VALUE.FIR_DSP_NR } {
 	# Procedure called to validate FIR_DSP_NR
+	return true
+}
+
+proc update_PARAM_VALUE.FIR_TM { PARAM_VALUE.FIR_TM } {
+	# Procedure called to update FIR_TM when any of the dependent parameters in the arguments change
+}
+
+proc validate_PARAM_VALUE.FIR_TM { PARAM_VALUE.FIR_TM } {
+	# Procedure called to validate FIR_TM
 	return true
 }
 
@@ -104,5 +122,15 @@ proc update_MODELPARAM_VALUE.FIR_COEF_WIDTH { MODELPARAM_VALUE.FIR_COEF_WIDTH PA
 proc update_MODELPARAM_VALUE.FIR_DSP_NR { MODELPARAM_VALUE.FIR_DSP_NR PARAM_VALUE.FIR_DSP_NR } {
 	# Procedure called to set VHDL generic/Verilog parameter value(s) based on TCL parameter value
 	set_property value [get_property value ${PARAM_VALUE.FIR_DSP_NR}] ${MODELPARAM_VALUE.FIR_DSP_NR}
+}
+
+proc update_MODELPARAM_VALUE.FIR_COEF_MAG { MODELPARAM_VALUE.FIR_COEF_MAG PARAM_VALUE.FIR_COEF_MAG } {
+	# Procedure called to set VHDL generic/Verilog parameter value(s) based on TCL parameter value
+	set_property value [get_property value ${PARAM_VALUE.FIR_COEF_MAG}] ${MODELPARAM_VALUE.FIR_COEF_MAG}
+}
+
+proc update_MODELPARAM_VALUE.FIR_TM { MODELPARAM_VALUE.FIR_TM PARAM_VALUE.FIR_TM } {
+	# Procedure called to set VHDL generic/Verilog parameter value(s) based on TCL parameter value
+	set_property value [get_property value ${PARAM_VALUE.FIR_TM}] ${MODELPARAM_VALUE.FIR_TM}
 }
 
