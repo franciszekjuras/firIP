@@ -4,10 +4,10 @@
 	module firMainAXI #
 	(
 		// Users to add parameters here
-		parameter FIR_DATA_WIDTH = 32,
+		parameter FIR_DATA_WIDTH = 14,
 		parameter FIR_COEF_WIDTH = 18,
-		parameter FIR_COEF_MAG = 16,
-		parameter FIR_DSP_NR = 32, 
+		parameter FIR_COEF_MAG = 0,
+		parameter FIR_DSP_NR = 4, 
 		parameter FIR_TM = 2,
 
 		// User parmaters end
@@ -268,10 +268,11 @@
 
 	//counter connections wiring
 	wire [COUNT_WIDTH-1:0] dsp_con_count [FIR_DSP_NR + 1];
-	localparam DSP_MULT_LAT_DIFF = 1; // latency difference between coef and sample input
-	shiftby #(.BY(DSP_MULT_LAT_DIFF), .WIDTH(COUNT_WIDTH))
-	shift_coef_count 
-	(.in(count), .out(dsp_con_count[0]), .clk(fir_clk));
+	assign dsp_con_count[0] = count;
+	// localparam DSP_MULT_LAT_DIFF = 1; // latency difference between coef and sample input
+	// shiftby #(.BY(DSP_MULT_LAT_DIFF), .WIDTH(COUNT_WIDTH))
+	// shift_coef_count 
+	// (.in(count), .out(dsp_con_count[0]), .clk(fir_clk));
 
 
 
@@ -306,7 +307,7 @@
 	);
 
 
-	localparam DSP_PIPELINE_DIFF = 2; //height difference between samples and sums pipelines (number of regs in dsp block before final sum)
+	localparam DSP_PIPELINE_DIFF = 1; // difference in registers from in multiplexers to first summation in dsp block (so fresh sample would contribute to fresh 0 sum)
 	wire [COUNT_WIDTH-1:0] sum_count;
 	shiftby #(.BY(DSP_PIPELINE_DIFF), .WIDTH(COUNT_WIDTH))
 	shift_sum_count 
@@ -317,7 +318,7 @@
 	.DATA_WIDTH(FIR_DATA_WIDTH)	
 	) 
 	inst_sum_multplx (
-	.count(count),
+	.count(sum_count),
 	.in(0),
 	.loop(sum_loop_end),
 	.out(dsp_con_sum[0])
@@ -345,7 +346,7 @@
 			.clk(fir_clk),
 			.inX(dsp_con_x[k]),
 			.outX(dsp_con_x[k+1]),
-			.inCoef(coef_crr[k]), //TODO: add wires
+			.inCoef(coef_crr[k]),
 			.inSum(dsp_con_sum[k]),
 			.outSum(dsp_con_sum[k+1])
 			);
@@ -371,7 +372,7 @@
 	genvar i_cp, j_cp;
 	for(i_cp = 0; i_cp < FIR_DSP_NR; i_cp = i_cp + 1) begin
 		for(j_cp = 0; j_cp < FIR_TM; j_cp = j_cp + 1) begin
-			assign coefs_pack[i_cp][j_cp] = coefs[FIR_TM * j_cp + i_cp];
+			assign coefs_pack[i_cp][j_cp] = coefs[FIR_DSP_NR * j_cp + i_cp];
 		end
 	end
 

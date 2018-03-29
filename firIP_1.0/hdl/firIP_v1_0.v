@@ -6,8 +6,8 @@
 		// Users to add parameters here
         parameter FIR_DATA_WIDTH = 14,
         parameter FIR_COEF_WIDTH = 18,
-		parameter FIR_COEF_MAG = 16,
-        parameter FIR_DSP_NR = 80,
+		parameter FIR_COEF_MAG = 0,
+        parameter FIR_DSP_NR = 4,
         parameter FIR_TM = 2,
 		// User parameters ends
 		// Do not modify the parameters beyond this line

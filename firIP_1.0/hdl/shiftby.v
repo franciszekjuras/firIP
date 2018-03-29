@@ -13,7 +13,7 @@ module shiftby
     integer k;
 
     if(BY > 0) begin
-        reg [WIDTH-1:0] shift [BY-1:0];
+        reg [WIDTH-1:0] shift [BY];
         assign out = shift[BY-1];
 
         always @(posedge clk) 

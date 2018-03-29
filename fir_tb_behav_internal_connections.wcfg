@@ -1,0 +1,276 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<wave_config>
+   <wave_state>
+   </wave_state>
+   <db_ref_list>
+      <db_ref path="fir_tb_behav.wdb" id="1">
+         <top_modules>
+            <top_module name="fir_tb" />
+            <top_module name="glbl" />
+         </top_modules>
+      </db_ref>
+   </db_ref_list>
+   <zoom_setting>
+      <ZoomStartTime time="863383740fs"></ZoomStartTime>
+      <ZoomEndTime time="1166925574fs"></ZoomEndTime>
+      <Cursor1Time time="1249000000fs"></Cursor1Time>
+   </zoom_setting>
+   <column_width_setting>
+      <NameColumnWidth column_width="175"></NameColumnWidth>
+      <ValueColumnWidth column_width="134"></ValueColumnWidth>
+   </column_width_setting>
+   <WVObjectSize size="59" />
+   <wvobject type="array" fp_name="/fir_tb/coef_t">
+      <obj_property name="ElementShortName">coef_t[17:0]</obj_property>
+      <obj_property name="ObjectShortName">coef_t[17:0]</obj_property>
+   </wvobject>
+   <wvobject type="array" fp_name="/fir_tb/coef_count">
+      <obj_property name="ElementShortName">coef_count[31:0]</obj_property>
+      <obj_property name="ObjectShortName">coef_count[31:0]</obj_property>
+   </wvobject>
+   <wvobject type="array" fp_name="/fir_tb/out">
+      <obj_property name="ElementShortName">out[31:0]</obj_property>
+      <obj_property name="ObjectShortName">out[31:0]</obj_property>
+   </wvobject>
+   <wvobject type="array" fp_name="/fir_tb/inCoefs">
+      <obj_property name="ElementShortName">inCoefs[31:0]</obj_property>
+      <obj_property name="ObjectShortName">inCoefs[31:0]</obj_property>
+   </wvobject>
+   <wvobject type="array" fp_name="/fir_tb/inData">
+      <obj_property name="ElementShortName">inData[31:0]</obj_property>
+      <obj_property name="ObjectShortName">inData[31:0]</obj_property>
+   </wvobject>
+   <wvobject type="logic" fp_name="/fir_tb/captureOutput">
+      <obj_property name="ElementShortName">captureOutput</obj_property>
+      <obj_property name="ObjectShortName">captureOutput</obj_property>
+   </wvobject>
+   <wvobject type="logic" fp_name="/fir_tb/reset">
+      <obj_property name="ElementShortName">reset</obj_property>
+      <obj_property name="ObjectShortName">reset</obj_property>
+   </wvobject>
+   <wvobject type="logic" fp_name="/fir_tb/axi_clk">
+      <obj_property name="ElementShortName">axi_clk</obj_property>
+      <obj_property name="ObjectShortName">axi_clk</obj_property>
+   </wvobject>
+   <wvobject type="array" fp_name="/fir_tb/leds_out">
+      <obj_property name="ElementShortName">leds_out[7:0]</obj_property>
+      <obj_property name="ObjectShortName">leds_out[7:0]</obj_property>
+   </wvobject>
+   <wvobject type="logic" fp_name="/fir_tb/s00_axi_aclk">
+      <obj_property name="ElementShortName">s00_axi_aclk</obj_property>
+      <obj_property name="ObjectShortName">s00_axi_aclk</obj_property>
+   </wvobject>
+   <wvobject type="logic" fp_name="/fir_tb/s00_axi_aresetn">
+      <obj_property name="ElementShortName">s00_axi_aresetn</obj_property>
+      <obj_property name="ObjectShortName">s00_axi_aresetn</obj_property>
+   </wvobject>
+   <wvobject type="array" fp_name="/fir_tb/s00_axi_awaddr">
+      <obj_property name="ElementShortName">s00_axi_awaddr[15:0]</obj_property>
+      <obj_property name="ObjectShortName">s00_axi_awaddr[15:0]</obj_property>
+   </wvobject>
+   <wvobject type="array" fp_name="/fir_tb/s00_axi_awprot">
+      <obj_property name="ElementShortName">s00_axi_awprot[2:0]</obj_property>
+      <obj_property name="ObjectShortName">s00_axi_awprot[2:0]</obj_property>
+   </wvobject>
+   <wvobject type="logic" fp_name="/fir_tb/s00_axi_awvalid">
+      <obj_property name="ElementShortName">s00_axi_awvalid</obj_property>
+      <obj_property name="ObjectShortName">s00_axi_awvalid</obj_property>
+   </wvobject>
+   <wvobject type="logic" fp_name="/fir_tb/s00_axi_awready">
+      <obj_property name="ElementShortName">s00_axi_awready</obj_property>
+      <obj_property name="ObjectShortName">s00_axi_awready</obj_property>
+   </wvobject>
+   <wvobject type="array" fp_name="/fir_tb/s00_axi_wdata">
+      <obj_property name="ElementShortName">s00_axi_wdata[31:0]</obj_property>
+      <obj_property name="ObjectShortName">s00_axi_wdata[31:0]</obj_property>
+   </wvobject>
+   <wvobject type="array" fp_name="/fir_tb/s00_axi_wstrb">
+      <obj_property name="ElementShortName">s00_axi_wstrb[3:0]</obj_property>
+      <obj_property name="ObjectShortName">s00_axi_wstrb[3:0]</obj_property>
+   </wvobject>
+   <wvobject type="logic" fp_name="/fir_tb/s00_axi_wvalid">
+      <obj_property name="ElementShortName">s00_axi_wvalid</obj_property>
+      <obj_property name="ObjectShortName">s00_axi_wvalid</obj_property>
+   </wvobject>
+   <wvobject type="logic" fp_name="/fir_tb/s00_axi_wready">
+      <obj_property name="ElementShortName">s00_axi_wready</obj_property>
+      <obj_property name="ObjectShortName">s00_axi_wready</obj_property>
+   </wvobject>
+   <wvobject type="array" fp_name="/fir_tb/s00_axi_bresp">
+      <obj_property name="ElementShortName">s00_axi_bresp[1:0]</obj_property>
+      <obj_property name="ObjectShortName">s00_axi_bresp[1:0]</obj_property>
+   </wvobject>
+   <wvobject type="logic" fp_name="/fir_tb/s00_axi_bvalid">
+      <obj_property name="ElementShortName">s00_axi_bvalid</obj_property>
+      <obj_property name="ObjectShortName">s00_axi_bvalid</obj_property>
+   </wvobject>
+   <wvobject type="logic" fp_name="/fir_tb/s00_axi_bready">
+      <obj_property name="ElementShortName">s00_axi_bready</obj_property>
+      <obj_property name="ObjectShortName">s00_axi_bready</obj_property>
+   </wvobject>
+   <wvobject type="array" fp_name="/fir_tb/s00_axi_araddr">
+      <obj_property name="ElementShortName">s00_axi_araddr[15:0]</obj_property>
+      <obj_property name="ObjectShortName">s00_axi_araddr[15:0]</obj_property>
+   </wvobject>
+   <wvobject type="array" fp_name="/fir_tb/s00_axi_arprot">
+      <obj_property name="ElementShortName">s00_axi_arprot[2:0]</obj_property>
+      <obj_property name="ObjectShortName">s00_axi_arprot[2:0]</obj_property>
+   </wvobject>
+   <wvobject type="logic" fp_name="/fir_tb/s00_axi_arvalid">
+      <obj_property name="ElementShortName">s00_axi_arvalid</obj_property>
+      <obj_property name="ObjectShortName">s00_axi_arvalid</obj_property>
+   </wvobject>
+   <wvobject type="logic" fp_name="/fir_tb/s00_axi_arready">
+      <obj_property name="ElementShortName">s00_axi_arready</obj_property>
+      <obj_property name="ObjectShortName">s00_axi_arready</obj_property>
+   </wvobject>
+   <wvobject type="array" fp_name="/fir_tb/s00_axi_rdata">
+      <obj_property name="ElementShortName">s00_axi_rdata[31:0]</obj_property>
+      <obj_property name="ObjectShortName">s00_axi_rdata[31:0]</obj_property>
+   </wvobject>
+   <wvobject type="array" fp_name="/fir_tb/s00_axi_rresp">
+      <obj_property name="ElementShortName">s00_axi_rresp[1:0]</obj_property>
+      <obj_property name="ObjectShortName">s00_axi_rresp[1:0]</obj_property>
+   </wvobject>
+   <wvobject type="logic" fp_name="/fir_tb/s00_axi_rvalid">
+      <obj_property name="ElementShortName">s00_axi_rvalid</obj_property>
+      <obj_property name="ObjectShortName">s00_axi_rvalid</obj_property>
+   </wvobject>
+   <wvobject type="logic" fp_name="/fir_tb/s00_axi_rready">
+      <obj_property name="ElementShortName">s00_axi_rready</obj_property>
+      <obj_property name="ObjectShortName">s00_axi_rready</obj_property>
+   </wvobject>
+   <wvobject type="array" fp_name="/fir_tb/FIR_DATA_WIDTH">
+      <obj_property name="ElementShortName">FIR_DATA_WIDTH[31:0]</obj_property>
+      <obj_property name="ObjectShortName">FIR_DATA_WIDTH[31:0]</obj_property>
+   </wvobject>
+   <wvobject type="array" fp_name="/fir_tb/FIR_COEF_WIDTH">
+      <obj_property name="ElementShortName">FIR_COEF_WIDTH[31:0]</obj_property>
+      <obj_property name="ObjectShortName">FIR_COEF_WIDTH[31:0]</obj_property>
+   </wvobject>
+   <wvobject type="array" fp_name="/fir_tb/FIR_COEF_MAG">
+      <obj_property name="ElementShortName">FIR_COEF_MAG[31:0]</obj_property>
+      <obj_property name="ObjectShortName">FIR_COEF_MAG[31:0]</obj_property>
+   </wvobject>
+   <wvobject type="array" fp_name="/fir_tb/FIR_DSP_NR">
+      <obj_property name="ElementShortName">FIR_DSP_NR[31:0]</obj_property>
+      <obj_property name="ObjectShortName">FIR_DSP_NR[31:0]</obj_property>
+   </wvobject>
+   <wvobject type="array" fp_name="/fir_tb/FIR_TM">
+      <obj_property name="ElementShortName">FIR_TM[31:0]</obj_property>
+      <obj_property name="ObjectShortName">FIR_TM[31:0]</obj_property>
+   </wvobject>
+   <wvobject type="array" fp_name="/fir_tb/C_S00_AXI_DATA_WIDTH">
+      <obj_property name="ElementShortName">C_S00_AXI_DATA_WIDTH[31:0]</obj_property>
+      <obj_property name="ObjectShortName">C_S00_AXI_DATA_WIDTH[31:0]</obj_property>
+   </wvobject>
+   <wvobject type="array" fp_name="/fir_tb/C_S00_AXI_ADDR_WIDTH">
+      <obj_property name="ElementShortName">C_S00_AXI_ADDR_WIDTH[31:0]</obj_property>
+      <obj_property name="ObjectShortName">C_S00_AXI_ADDR_WIDTH[31:0]</obj_property>
+   </wvobject>
+   <wvobject type="array" fp_name="/fir_tb/FIR_COEFS_NR">
+      <obj_property name="ElementShortName">FIR_COEFS_NR[31:0]</obj_property>
+      <obj_property name="ObjectShortName">FIR_COEFS_NR[31:0]</obj_property>
+   </wvobject>
+   <wvobject type="array" fp_name="/fir_tb/FT">
+      <obj_property name="ElementShortName">FT[31:0]</obj_property>
+      <obj_property name="ObjectShortName">FT[31:0]</obj_property>
+   </wvobject>
+   <wvobject type="array" fp_name="/fir_tb/AT">
+      <obj_property name="ElementShortName">AT[31:0]</obj_property>
+      <obj_property name="ObjectShortName">AT[31:0]</obj_property>
+   </wvobject>
+   <wvobject type="logic" fp_name="/fir_tb/fir_clk">
+      <obj_property name="ElementShortName">fir_clk</obj_property>
+      <obj_property name="ObjectShortName">fir_clk</obj_property>
+   </wvobject>
+   <wvobject type="array" fp_name="/fir_tb/fir_in">
+      <obj_property name="ElementShortName">fir_in[13:0]</obj_property>
+      <obj_property name="ObjectShortName">fir_in[13:0]</obj_property>
+      <obj_property name="Radix">SIGNEDDECRADIX</obj_property>
+   </wvobject>
+   <wvobject type="array" fp_name="/fir_tb/fir_out">
+      <obj_property name="ElementShortName">fir_out[13:0]</obj_property>
+      <obj_property name="ObjectShortName">fir_out[13:0]</obj_property>
+      <obj_property name="Radix">SIGNEDDECRADIX</obj_property>
+   </wvobject>
+   <wvobject type="array" fp_name="/fir_tb/firMainAXI_inst/sum_loop_end">
+      <obj_property name="ElementShortName">sum_loop_end[13:0]</obj_property>
+      <obj_property name="ObjectShortName">sum_loop_end[13:0]</obj_property>
+      <obj_property name="Radix">SIGNEDDECRADIX</obj_property>
+   </wvobject>
+   <wvobject type="array" fp_name="/fir_tb/firMainAXI_inst/count">
+      <obj_property name="ElementShortName">count[0:0]</obj_property>
+      <obj_property name="ObjectShortName">count[0:0]</obj_property>
+   </wvobject>
+   <wvobject type="array" fp_name="/fir_tb/firMainAXI_inst/dsp_con_x[0]">
+      <obj_property name="ElementShortName">[0][13:0]</obj_property>
+      <obj_property name="ObjectShortName">[0][13:0]</obj_property>
+      <obj_property name="Radix">SIGNEDDECRADIX</obj_property>
+   </wvobject>
+   <wvobject type="array" fp_name="/fir_tb/firMainAXI_inst/dsp_con_x[1]">
+      <obj_property name="ElementShortName">[1][13:0]</obj_property>
+      <obj_property name="ObjectShortName">[1][13:0]</obj_property>
+      <obj_property name="Radix">SIGNEDDECRADIX</obj_property>
+   </wvobject>
+   <wvobject type="array" fp_name="/fir_tb/firMainAXI_inst/dsp_con_x[2]">
+      <obj_property name="ElementShortName">[2][13:0]</obj_property>
+      <obj_property name="ObjectShortName">[2][13:0]</obj_property>
+      <obj_property name="Radix">SIGNEDDECRADIX</obj_property>
+   </wvobject>
+   <wvobject type="array" fp_name="/fir_tb/firMainAXI_inst/dsp_con_x[3]">
+      <obj_property name="ElementShortName">[3][13:0]</obj_property>
+      <obj_property name="ObjectShortName">[3][13:0]</obj_property>
+      <obj_property name="Radix">SIGNEDDECRADIX</obj_property>
+   </wvobject>
+   <wvobject type="array" fp_name="/fir_tb/firMainAXI_inst/dsp_con_sum[0]">
+      <obj_property name="ElementShortName">[0][13:0]</obj_property>
+      <obj_property name="ObjectShortName">[0][13:0]</obj_property>
+      <obj_property name="Radix">SIGNEDDECRADIX</obj_property>
+   </wvobject>
+   <wvobject type="array" fp_name="/fir_tb/firMainAXI_inst/dsp_con_sum[1]">
+      <obj_property name="ElementShortName">[1][13:0]</obj_property>
+      <obj_property name="ObjectShortName">[1][13:0]</obj_property>
+      <obj_property name="Radix">SIGNEDDECRADIX</obj_property>
+   </wvobject>
+   <wvobject type="array" fp_name="/fir_tb/firMainAXI_inst/dsp_con_sum[2]">
+      <obj_property name="ElementShortName">[2][13:0]</obj_property>
+      <obj_property name="ObjectShortName">[2][13:0]</obj_property>
+      <obj_property name="Radix">SIGNEDDECRADIX</obj_property>
+   </wvobject>
+   <wvobject type="array" fp_name="/fir_tb/firMainAXI_inst/dsp_con_sum[3]">
+      <obj_property name="ElementShortName">[3][13:0]</obj_property>
+      <obj_property name="ObjectShortName">[3][13:0]</obj_property>
+      <obj_property name="Radix">SIGNEDDECRADIX</obj_property>
+   </wvobject>
+   <wvobject type="array" fp_name="/fir_tb/firMainAXI_inst/dsp_con_sum[4]">
+      <obj_property name="ElementShortName">[4][13:0]</obj_property>
+      <obj_property name="ObjectShortName">[4][13:0]</obj_property>
+      <obj_property name="Radix">SIGNEDDECRADIX</obj_property>
+   </wvobject>
+   <wvobject type="array" fp_name="/fir_tb/firMainAXI_inst/\genblk1[0].inst_tap /inX">
+      <obj_property name="ElementShortName">inX[13:0]</obj_property>
+      <obj_property name="ObjectShortName">inX[13:0]</obj_property>
+      <obj_property name="Radix">SIGNEDDECRADIX</obj_property>
+   </wvobject>
+   <wvobject type="array" fp_name="/fir_tb/firMainAXI_inst/\genblk1[0].inst_tap /outX">
+      <obj_property name="ElementShortName">outX[13:0]</obj_property>
+      <obj_property name="ObjectShortName">outX[13:0]</obj_property>
+      <obj_property name="Radix">SIGNEDDECRADIX</obj_property>
+   </wvobject>
+   <wvobject type="array" fp_name="/fir_tb/firMainAXI_inst/\genblk1[0].inst_tap /inCoef">
+      <obj_property name="ElementShortName">inCoef[17:0]</obj_property>
+      <obj_property name="ObjectShortName">inCoef[17:0]</obj_property>
+      <obj_property name="Radix">SIGNEDDECRADIX</obj_property>
+   </wvobject>
+   <wvobject type="array" fp_name="/fir_tb/firMainAXI_inst/\genblk1[0].inst_tap /inSum">
+      <obj_property name="ElementShortName">inSum[13:0]</obj_property>
+      <obj_property name="ObjectShortName">inSum[13:0]</obj_property>
+      <obj_property name="Radix">SIGNEDDECRADIX</obj_property>
+   </wvobject>
+   <wvobject type="array" fp_name="/fir_tb/firMainAXI_inst/\genblk1[0].inst_tap /outSum">
+      <obj_property name="ElementShortName">outSum[13:0]</obj_property>
+      <obj_property name="ObjectShortName">outSum[13:0]</obj_property>
+      <obj_property name="Radix">SIGNEDDECRADIX</obj_property>
+   </wvobject>
+</wave_config>
