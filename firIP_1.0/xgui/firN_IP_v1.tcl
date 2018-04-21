@@ -14,6 +14,9 @@ proc init_gui { IPINST } {
   ipgui::add_param $IPINST -name "FIR_COEF_WIDTH"
   set FIR_DSP_NR [ipgui::add_param $IPINST -name "FIR_DSP_NR"]
   set_property tooltip {Check in your fpga documentation how many blocks are available} ${FIR_DSP_NR}
+  set FIR_COEF_MAG [ipgui::add_param $IPINST -name "FIR_COEF_MAG"]
+  set_property tooltip {Coefficients should be converted by multiplying by 2^FIR_COEF_MAG} ${FIR_COEF_MAG}
+  ipgui::add_param $IPINST -name "FIR_TM"
 
 }
 

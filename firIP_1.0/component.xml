@@ -326,7 +326,7 @@
         <spirit:parameters>
           <spirit:parameter>
             <spirit:name>viewChecksum</spirit:name>
-            <spirit:value>902d1bf5</spirit:value>
+            <spirit:value>3cb31274</spirit:value>
           </spirit:parameter>
         </spirit:parameters>
       </spirit:view>
@@ -342,7 +342,7 @@
         <spirit:parameters>
           <spirit:parameter>
             <spirit:name>viewChecksum</spirit:name>
-            <spirit:value>902d1bf5</spirit:value>
+            <spirit:value>781042aa</spirit:value>
           </spirit:parameter>
         </spirit:parameters>
       </spirit:view>
@@ -370,7 +370,7 @@
         <spirit:parameters>
           <spirit:parameter>
             <spirit:name>viewChecksum</spirit:name>
-            <spirit:value>cc0284a0</spirit:value>
+            <spirit:value>b25b2824</spirit:value>
           </spirit:parameter>
         </spirit:parameters>
       </spirit:view>
@@ -799,12 +799,12 @@
       <spirit:modelParameter spirit:dataType="integer">
         <spirit:name>FIR_DSP_NR</spirit:name>
         <spirit:displayName>Fir Dsp Nr</spirit:displayName>
-        <spirit:value spirit:format="long" spirit:resolve="generated" spirit:id="MODELPARAM_VALUE.FIR_DSP_NR">80</spirit:value>
+        <spirit:value spirit:format="long" spirit:resolve="generated" spirit:id="MODELPARAM_VALUE.FIR_DSP_NR">4</spirit:value>
       </spirit:modelParameter>
       <spirit:modelParameter spirit:dataType="integer">
         <spirit:name>FIR_COEF_MAG</spirit:name>
         <spirit:displayName>Fir Coef Mag</spirit:displayName>
-        <spirit:value spirit:format="long" spirit:resolve="generated" spirit:id="MODELPARAM_VALUE.FIR_COEF_MAG">16</spirit:value>
+        <spirit:value spirit:format="long" spirit:resolve="generated" spirit:id="MODELPARAM_VALUE.FIR_COEF_MAG">0</spirit:value>
       </spirit:modelParameter>
       <spirit:modelParameter spirit:dataType="integer">
         <spirit:name>FIR_TM</spirit:name>
@@ -833,11 +833,19 @@
     <spirit:fileSet>
       <spirit:name>xilinx_verilogsynthesis_view_fileset</spirit:name>
       <spirit:file>
+        <spirit:name>hdl/coef_multplx.sv</spirit:name>
+        <spirit:fileType>systemVerilogSource</spirit:fileType>
+      </spirit:file>
+      <spirit:file>
+        <spirit:name>hdl/counter.sv</spirit:name>
+        <spirit:fileType>systemVerilogSource</spirit:fileType>
+      </spirit:file>
+      <spirit:file>
         <spirit:name>hdl/firMainAXI.v</spirit:name>
         <spirit:fileType>systemVerilogSource</spirit:fileType>
       </spirit:file>
       <spirit:file>
-        <spirit:name>/home/franciszek/Documents/fpga/IPs/firN_ip/edit_firIP_v1_0.srcs/sources_1/new/coef_mult.sv</spirit:name>
+        <spirit:name>hdl/loop_multplx.sv</spirit:name>
         <spirit:fileType>systemVerilogSource</spirit:fileType>
       </spirit:file>
       <spirit:file>
@@ -846,22 +854,30 @@
       </spirit:file>
       <spirit:file>
         <spirit:name>hdl/shiftby.v</spirit:name>
-        <spirit:fileType>verilogSource</spirit:fileType>
+        <spirit:fileType>systemVerilogSource</spirit:fileType>
       </spirit:file>
       <spirit:file>
         <spirit:name>hdl/firIP_v1_0.v</spirit:name>
         <spirit:fileType>systemVerilogSource</spirit:fileType>
-        <spirit:userFileType>CHECKSUM_fa75d1c9</spirit:userFileType>
+        <spirit:userFileType>CHECKSUM_7e64ab0c</spirit:userFileType>
       </spirit:file>
     </spirit:fileSet>
     <spirit:fileSet>
       <spirit:name>xilinx_verilogbehavioralsimulation_view_fileset</spirit:name>
       <spirit:file>
+        <spirit:name>hdl/coef_multplx.sv</spirit:name>
+        <spirit:fileType>systemVerilogSource</spirit:fileType>
+      </spirit:file>
+      <spirit:file>
+        <spirit:name>hdl/counter.sv</spirit:name>
+        <spirit:fileType>systemVerilogSource</spirit:fileType>
+      </spirit:file>
+      <spirit:file>
         <spirit:name>hdl/firMainAXI.v</spirit:name>
         <spirit:fileType>systemVerilogSource</spirit:fileType>
       </spirit:file>
       <spirit:file>
-        <spirit:name>/home/franciszek/Documents/fpga/IPs/firN_ip/edit_firIP_v1_0.srcs/sources_1/new/coef_mult.sv</spirit:name>
+        <spirit:name>hdl/loop_multplx.sv</spirit:name>
         <spirit:fileType>systemVerilogSource</spirit:fileType>
       </spirit:file>
       <spirit:file>
@@ -870,10 +886,6 @@
       </spirit:file>
       <spirit:file>
         <spirit:name>hdl/shiftby.v</spirit:name>
-        <spirit:fileType>verilogSource</spirit:fileType>
-      </spirit:file>
-      <spirit:file>
-        <spirit:name>hdl/firIP_v1_0.v</spirit:name>
         <spirit:fileType>systemVerilogSource</spirit:fileType>
       </spirit:file>
     </spirit:fileSet>
@@ -914,7 +926,7 @@
       <spirit:file>
         <spirit:name>xgui/firN_IP_v1.tcl</spirit:name>
         <spirit:fileType>tclSource</spirit:fileType>
-        <spirit:userFileType>CHECKSUM_cc0284a0</spirit:userFileType>
+        <spirit:userFileType>CHECKSUM_b25b2824</spirit:userFileType>
         <spirit:userFileType>XGUI_VERSION_2</spirit:userFileType>
       </spirit:file>
     </spirit:fileSet>
@@ -937,6 +949,10 @@
       </spirit:file>
       <spirit:file>
         <spirit:name>/home/franciszek/Documents/fpga/IPs/firN_ip/coefs.dat</spirit:name>
+        <spirit:fileType>unknown</spirit:fileType>
+      </spirit:file>
+      <spirit:file>
+        <spirit:name>/home/franciszek/Documents/fpga/IPs/firN_ip/fir_tb_behav_internal_connections.wcfg</spirit:name>
         <spirit:fileType>unknown</spirit:fileType>
       </spirit:file>
     </spirit:fileSet>
@@ -1010,16 +1026,16 @@
     <spirit:parameter>
       <spirit:name>FIR_DSP_NR</spirit:name>
       <spirit:displayName>DSP blocks used</spirit:displayName>
-      <spirit:value spirit:format="long" spirit:resolve="user" spirit:id="PARAM_VALUE.FIR_DSP_NR">80</spirit:value>
+      <spirit:value spirit:format="long" spirit:resolve="user" spirit:id="PARAM_VALUE.FIR_DSP_NR">4</spirit:value>
     </spirit:parameter>
     <spirit:parameter>
       <spirit:name>FIR_COEF_MAG</spirit:name>
-      <spirit:displayName>Fir Coef Mag</spirit:displayName>
-      <spirit:value spirit:format="long" spirit:resolve="user" spirit:id="PARAM_VALUE.FIR_COEF_MAG">16</spirit:value>
+      <spirit:displayName>Fir Coef Magnitude</spirit:displayName>
+      <spirit:value spirit:format="long" spirit:resolve="user" spirit:id="PARAM_VALUE.FIR_COEF_MAG">0</spirit:value>
     </spirit:parameter>
     <spirit:parameter>
       <spirit:name>FIR_TM</spirit:name>
-      <spirit:displayName>Fir Tm</spirit:displayName>
+      <spirit:displayName>Fir Time Multiplexing</spirit:displayName>
       <spirit:value spirit:format="long" spirit:resolve="user" spirit:id="PARAM_VALUE.FIR_TM">2</spirit:value>
     </spirit:parameter>
   </spirit:parameters>
@@ -1032,8 +1048,8 @@
         <xilinx:taxonomy>AXI_Peripheral</xilinx:taxonomy>
       </xilinx:taxonomies>
       <xilinx:displayName>firNIP</xilinx:displayName>
-      <xilinx:coreRevision>28</xilinx:coreRevision>
-      <xilinx:coreCreationDateTime>2018-03-19T16:53:22Z</xilinx:coreCreationDateTime>
+      <xilinx:coreRevision>33</xilinx:coreRevision>
+      <xilinx:coreCreationDateTime>2018-04-21T10:15:24Z</xilinx:coreCreationDateTime>
       <xilinx:tags>
         <xilinx:tag xilinx:name="user.org:user:firIP:1.0_ARCHIVE_LOCATION">/home/franciszek/Documents/fpga/IPs/firN_ip/firIP_1.0</xilinx:tag>
         <xilinx:tag xilinx:name="user.org:user:firIP:1_ARCHIVE_LOCATION">/home/franciszek/Documents/fpga/IPs/firN_ip/firIP_1.0</xilinx:tag>
@@ -1045,10 +1061,10 @@
       <xilinx:xilinxVersion>2017.3</xilinx:xilinxVersion>
       <xilinx:checksum xilinx:scope="busInterfaces" xilinx:value="625aaacd"/>
       <xilinx:checksum xilinx:scope="memoryMaps" xilinx:value="ed1368d5"/>
-      <xilinx:checksum xilinx:scope="fileGroups" xilinx:value="3e2800cb"/>
+      <xilinx:checksum xilinx:scope="fileGroups" xilinx:value="3c52030d"/>
       <xilinx:checksum xilinx:scope="ports" xilinx:value="fa19b567"/>
-      <xilinx:checksum xilinx:scope="hdlParameters" xilinx:value="4efcbfb2"/>
-      <xilinx:checksum xilinx:scope="parameters" xilinx:value="9f7c6c0f"/>
+      <xilinx:checksum xilinx:scope="hdlParameters" xilinx:value="c8ebfcd2"/>
+      <xilinx:checksum xilinx:scope="parameters" xilinx:value="67420507"/>
     </xilinx:packagingInfo>
   </spirit:vendorExtensions>
 </spirit:component>

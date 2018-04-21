@@ -6,16 +6,14 @@ module coef_multplx
 	input wire clk,
 	input wire [CW-1:0] counter_in,
 	output reg [CW-1:0] counter_out,
-	input wire signed [COEFW-1:0] coef_pack [TM],
-	output reg [COEFW-1:0] coef_out
+	input reg signed [COEFW-1:0] coef_pack [TM],
+	output reg signed [COEFW-1:0] coef_out
     );
 	
-	integer idx;
 	
-	always @(*)
+	always_comb
 	begin
-		coef_out = 0;
-		for(idx = 0; idx < TM; idx = idx + 1)
+		for(int idx = 0; idx < TM; idx = idx + 1)
 		begin
 			if(idx == counter_in)
 				coef_out = coef_pack[idx];
