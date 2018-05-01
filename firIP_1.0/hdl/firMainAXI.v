@@ -272,13 +272,9 @@
 	//counter connections wiring
 	wire [COUNT_WIDTH-1:0] dsp_con_count [FIR_DSP_NR + 1];
 	assign dsp_con_count[0] = count;
-	// localparam DSP_MULT_LAT_DIFF = 1; // latency difference between coef and sample input
-	// shiftby #(.BY(DSP_MULT_LAT_DIFF), .WIDTH(COUNT_WIDTH))
-	// shift_coef_count 
-	// (.in(count), .out(dsp_con_count[0]), .clk(fir_clk));
 
 
-
+	/*---Partial sums and samples wirings---*/
 	localparam SUM_WIDTH = FIR_DATA_WIDTH + FIR_COEF_MAG; /*at the end, sum is shortened by COEFMAG to XW length,
 	so there is little reason to add more registers*/
 
@@ -287,17 +283,20 @@
 	
 	wire signed [SUM_WIDTH-1:0] sum_loop_end;
 	wire signed [FIR_DATA_WIDTH-1:0] data_loop_end;
+	/*---------------------------------------*/
+
+	/*---Loop shift (synchronization)... and multiplexing---*/
 	localparam LOOP_FEEDBACK_SYNC = FIR_TM + 1 - (FIR_DSP_NR%FIR_TM);
 
-	shiftby #(.BY(LOOP_FEEDBACK_SYNC), .WIDTH(SUM_WIDTH))
+	shiftby #(.BY(LOOP_FEEDBACK_SYNC), .WIDTH(FIR_DATA_WIDTH))
 	shift_data_loop
 	(.in(dsp_con_x[FIR_DSP_NR]), .out(data_loop_end), .clk(fir_clk));
 
-	shiftby #(.BY(LOOP_FEEDBACK_SYNC), .WIDTH(FIR_DATA_WIDTH))
+	shiftby #(.BY(LOOP_FEEDBACK_SYNC), .WIDTH(SUM_WIDTH))
 	shift_sum_loop
 	(.in(dsp_con_sum[FIR_DSP_NR]), .out(sum_loop_end), .clk(fir_clk));
 
-
+	/*---...and samples multiplexing...---*/
 	loop_multplx #(
 	.COUNT_WIDTH(COUNT_WIDTH),
 	.DATA_WIDTH(FIR_DATA_WIDTH)	
@@ -309,8 +308,9 @@
 	.out(dsp_con_x[0])
 	);
 
-
-	localparam DSP_PIPELINE_DIFF = 1; // difference in registers from in multiplexers to first summation in dsp block (so fresh sample would contribute to fresh 0 sum)
+	/*---...and sum multiplexing (with synchronization)---*/
+	localparam DSP_PIPELINE_DIFF = 1; // difference in registers from samples multiplexer
+	// to first summation in dsp block (so fresh sample would contribute to fresh 0 sum)
 	wire [COUNT_WIDTH-1:0] sum_count;
 	shiftby #(.BY(DSP_PIPELINE_DIFF), .WIDTH(COUNT_WIDTH))
 	shift_sum_count 
@@ -318,7 +318,7 @@
 
 	loop_multplx #(
 	.COUNT_WIDTH(COUNT_WIDTH),
-	.DATA_WIDTH(FIR_DATA_WIDTH)	
+	.DATA_WIDTH(SUM_WIDTH)	
 	) 
 	inst_sum_multplx (
 	.count(sum_count),
@@ -326,18 +326,13 @@
 	.loop(sum_loop_end),
 	.out(dsp_con_sum[0])
 	);
+	/*--------------------------------------*/
 
-	// always @(posedge fir_clk) begin
-	// 	if(switches[SWITCH_FIR_EN] == 1'b1) begin
-	// 		fir_out[FIR_DATA_WIDTH-1:0] <= dsp_con_sum[FIR_DSP_NR][SUM_WIDTH-1: SUM_WIDTH - FIR_DATA_WIDTH]; 
-	// 		//output shift by coefficients' magnitude
-	// 		//same as [FIR_COEF_MAG + FIR_DATA_WIDTH - 1 : FIR_COEF_MAG] 
-	// 	end else begin
-	// 		fir_out <= fir_in;
-	// 	end
-	// end
-	// Generating fir taps (DSP blocks + shifting registers + coefficients' multiplexers)
-		//coef_mult wiring
+	/*----------------------------------------------------------------------------------*/
+	/*Generating fir taps (DSP blocks + shifting registers + coefficients' multiplexers)*/
+	/*----------------------------------------------------------------------------------*/
+
+	/*---Coefficients' wiring---*/
 
 	reg signed [FIR_COEF_WIDTH-1 : 0] coefs_pack [FIR_DSP_NR][FIR_TM];
 	genvar i_cp, j_cp;
@@ -347,12 +342,10 @@
 		end
 	end
 
-
 	wire signed [FIR_COEF_WIDTH-1 : 0] coef_crr [FIR_DSP_NR];
+	/*---------------------------------------*/
 
-	wire signed [FIR_COEF_WIDTH-1 : 0] coef_crr_debug1 [FIR_DSP_NR];
-	reg signed [FIR_COEF_WIDTH-1 : 0] coef_crr_debug2 [FIR_DSP_NR];
-
+	/*----------------Fir taps---------------*/
 	generate
 		for(genvar k = 0; k < FIR_DSP_NR; k = k + 1) begin
 			firtap #(
@@ -371,7 +364,9 @@
 			);
 		end
 	endgenerate
+	/*--------------------------------------*/
 
+	/*---Coefficients' multiplexing---*/
 	generate
 		for(genvar l = 0; l < FIR_DSP_NR; l = l+1) begin
 			coef_multplx #(
@@ -387,259 +382,132 @@
 			);
 		end
 	endgenerate
-	// generate		
-	// 	for(genvar k = 0; k < FIR_DSP_NR; k = k + 1) begin
-	// 		coef_multplx #(
-	// 		.COEFW(FIR_COEF_WIDTH),
-	// 		.TM(FIR_TM),
-	// 		.CW(COUNT_WIDTH)
-	// 		) inst_coef_multplx(
-	// 		.clk(fir_clk),
-	// 		.counter_in(dsp_con_count[k]),
-	// 		.counter_out(dsp_con_count[k+1]),
-	// 		.coef_pack(coefs_pack[k]),
-	// 		.coef_out(coef_crr[k])
-	// 		);
-	// 	end
-	// endgenerate
+	/*---------------------------------*/
 
-	// generate
-	// 	for(genvar l = 0; k < FIR_DSP_NR; k = k + 1) begin
-	// 		assign coef_crr_debug1[k] = coefs_pack[k][dsp_con_count[k]];
-	// 	end
-	// endgenerate
-	// reg[31:0] cidx;
-	// generate
-	// 	for(genvar m = 0; k < FIR_DSP_NR; k = k + 1) begin
-	// 		always_comb begin
-	// 			for(cidx = 0; cidx < FIR_TM; cidx = cidx + 1)
-	// 			begin
-	// 				if(dsp_con_count[k] == cidx)
-	// 					coef_crr_debug2[k] = 1024;
-	// 			end
-	// 		end
-	// 	end
-	// endgenerate
-
-
-
-
-	//out
-	reg [FIR_DATA_WIDTH-1:0] fir_in_debug_1;
-	reg [FIR_DATA_WIDTH-1:0] fir_in_debug_2;
-	reg [FIR_DATA_WIDTH-1:0]fir_in_debug_3;
+	/*---Output selection and shift---*/
 	reg signed [FIR_DATA_WIDTH-1:0]sum_loop_out;
 	reg [SUM_WIDTH-1:0]sum_loop_out_debug;
 	always @(posedge fir_clk) begin
 		if(sum_count == 0)
 			sum_loop_out[FIR_DATA_WIDTH-1:0] <= sum_loop_end[SUM_WIDTH-1: SUM_WIDTH - FIR_DATA_WIDTH];
 	end
-	always @(posedge fir_clk) begin
-		if(sum_count == 0)
-			sum_loop_out_debug <= sum_loop_end;
-	end
-	always @(posedge fir_clk) begin
-		fir_in_debug_3 <= fir_in;
-	end
-	always @(posedge fir_clk) begin
-		if(count == 0) begin
-			fir_in_debug_1 <= fir_in;
-			fir_in_debug_2 <= fir_in;			
-		end else begin
-			fir_in_debug_2 <= 0;
-		end
-	end
+	/*--------------------------------*/
 
+	/*---Fir switch on/off---*/
 	always @(*)
 	begin
-		case ({switches[SWITCH_FIR_EN],switches[SWITCH_FIR_DEBUG_1],switches[SWITCH_FIR_DEBUG_2]})
-			3'b000	:	fir_out = fir_in;
-			3'b100	:	fir_out = sum_loop_out;
-			default	:	fir_out = 4096;
+		case (switches[SWITCH_FIR_EN])
+			1'b0	:	fir_out = fir_in;
+			1'b1	:	fir_out = sum_loop_out;
+			default	:	fir_out = 0;
 		endcase
 	end
+	/*-----------------------*/
 
-	assign debug1_in = dsp_con_sum[0];
-	assign debug2_in = dsp_con_x[0];
-	assign debug3_in = coef_crr[0];
-	assign debug4_in = dsp_con_sum[1];
-	assign debug5_in = dsp_con_x[1];
-	assign debug6_in = coef_crr[1];
-	assign debug7_in = dsp_con_sum[2];
-	assign debug8_in = dsp_con_x[2];
-	assign debug9_in = coef_crr[2];
-	assign debug10_in = dsp_con_sum[3];
-
-
-	/////////////////////
-
+	/*-----Fir info------*/
 	always @(*) begin
 		coefs_max_nr = FIR_COEFS_NR;
 		info_1 = PROG_NAME;
 		info_2 = PROG_VER; 
 	end
+	/*-------------------*/
+	
+	localparam DEBUG_DSP_STAGES = 0;
+	localparam DEBUG_DSP_FIRST = 0;
+	if(((DEBUG_DSP_STAGES * 3) + 2 + 1) > DEBUG_DEPTH)
+		$error(1, "Fatal elab. error: DEBUG_DEPTH must be at least %d.", ((DEBUG_DSP_STAGES * 3) + 1));
+	if((DEBUG_DSP_STAGES + DEBUG_DSP_FIRST) > FIR_DSP_NR)
+		$error(1, "Fatal elab. error: DEBUG_DSP_STAGES + DEBUG_DSP_FIRST must be smaller or equal to FIR_DSP_NR = %d.", FIR_DSP_NR);
+	// generate
+	// 	for(genvar gva = 0; gva < 5; gva = gva + 1)
+	// 	begin
+	// 		assign debug_in[gva * 3] = dsp_con_sum[gva];
+	// 		assign debug_in[(gva * 3) + 1] = dsp_con_x[gva];
+	// 		assign debug_in[(gva * 3) + 2] = coef_crr[gva];
+	// 	end		
+	// endgenerate
+
+
+
+	//assign debug_in[0] = dsp_con_sum[0 + DEBUG_DSP_FIRST];
+	// assign debug_in[1] = dsp_con_x[0 + DEBUG_DSP_FIRST];
+	// assign debug_in[2] = coef_crr[0 + DEBUG_DSP_FIRST];
+	// assign debug_in[3] = dsp_con_sum[1 + DEBUG_DSP_FIRST];
+	// assign debug_in[4] = dsp_con_x[1 + DEBUG_DSP_FIRST];
+	// assign debug_in[5] = coef_crr[1 + DEBUG_DSP_FIRST];	
+	// assign debug_in[6] = dsp_con_sum[2 + DEBUG_DSP_FIRST];
+	// assign debug_in[7] = dsp_con_x[2 + DEBUG_DSP_FIRST];
+	// assign debug_in[8] = coef_crr[2 + DEBUG_DSP_FIRST];	
+	// assign debug_in[9] = dsp_con_sum[3 + DEBUG_DSP_FIRST];
+	// assign debug_in[10] = dsp_con_x[3 + DEBUG_DSP_FIRST];
+	// assign debug_in[11] = coef_crr[3 + DEBUG_DSP_FIRST];	
+	// assign debug_in[12] = dsp_con_sum[4 + DEBUG_DSP_FIRST];
+	// assign debug_in[13] = dsp_con_x[4 + DEBUG_DSP_FIRST];
+	// assign debug_in[14] = coef_crr[4 + DEBUG_DSP_FIRST];	
+	// assign debug_in[15] = dsp_con_sum[5 + DEBUG_DSP_FIRST];
+	// assign debug_in[16] = dsp_con_x[5 + DEBUG_DSP_FIRST];
+	// assign debug_in[17] = coef_crr[5 + DEBUG_DSP_FIRST];	
+	// assign debug_in[18] = dsp_con_sum[6 + DEBUG_DSP_FIRST];
+	// assign debug_in[19] = dsp_con_x[6 + DEBUG_DSP_FIRST];
+	// assign debug_in[20] = coef_crr[6 + DEBUG_DSP_FIRST];	
+	// assign debug_in[21] = dsp_con_sum[7 + DEBUG_DSP_FIRST];
+	// assign debug_in[22] = dsp_con_x[7 + DEBUG_DSP_FIRST];
+	// assign debug_in[23] = coef_crr[7 + DEBUG_DSP_FIRST];	
+	// assign debug_in[24] = dsp_con_sum[8 + DEBUG_DSP_FIRST];
+	// assign debug_in[25] = dsp_con_x[8 + DEBUG_DSP_FIRST];
+	// assign debug_in[26] = coef_crr[8 + DEBUG_DSP_FIRST];	
+	// assign debug_in[27] = dsp_con_sum[9 + DEBUG_DSP_FIRST];
+	// assign debug_in[28] = dsp_con_x[9 + DEBUG_DSP_FIRST];
+	// assign debug_in[29] = coef_crr[9 + DEBUG_DSP_FIRST];
+	// assign debug_in[30] = dsp_con_sum[10 + DEBUG_DSP_FIRST];
+
+	assign debug_in[0] = fir_in;
+	assign debug_in[(DEBUG_DSP_STAGES*3)+1] = sum_loop_end;
+	assign debug_in[(DEBUG_DSP_STAGES*3)+2] = sum_loop_out;
+	//assign debug_in[(DEBUG_DSP_STAGES*3)+3] = fir_in;
+
+
+	/////////////////////
+
+
 	// User logic ends
 
-	localparam DEBUG_LENGTH = 64;
-	localparam DEBUG_DEPTH = 10;
+	localparam DEBUG_LENGTH = 100;
+	localparam DEBUG_DEPTH = 3;
 
-	///////////////////////
-	wire [C_S_AXI_DATA_WIDTH-1:0] debug1_in;
-	reg [C_S_AXI_DATA_WIDTH-1:0] debug1 [DEBUG_LENGTH];
-	integer k;
-	always @(posedge fir_clk)
-	begin
-		if(switches[SWITCH_FIR_SNAP])
-		begin
-			debug1[0] <= debug1_in;
-			for(k = 1; k < DEBUG_LENGTH; k = k + 1) begin
-	            debug1[k] <= debug1[k-1];
-	        end
-	    end
-	end
-
-	wire [C_S_AXI_DATA_WIDTH-1:0] debug2_in;
-	reg [C_S_AXI_DATA_WIDTH-1:0] debug2 [DEBUG_LENGTH];
-	integer k;
-	always @(posedge fir_clk)
-	begin
-		if(switches[SWITCH_FIR_SNAP])
-		begin
-			debug2[0] <= debug2_in;
-			for(k = 1; k < DEBUG_LENGTH; k = k + 1) begin
-	            debug2[k] <= debug2[k-1];
-	        end
-	    end
-	end
-
-	wire [C_S_AXI_DATA_WIDTH-1:0] debug3_in;
-	reg [C_S_AXI_DATA_WIDTH-1:0] debug3 [DEBUG_LENGTH];
-	integer k;
-	always @(posedge fir_clk)
-	begin
-		if(switches[SWITCH_FIR_SNAP])
-		begin
-			debug3[0] <= debug3_in;
-			for(k = 1; k < DEBUG_LENGTH; k = k + 1) begin
-	            debug3[k] <= debug3[k-1];
-	        end
-	    end
-	end
-
-	wire [C_S_AXI_DATA_WIDTH-1:0] debug4_in;
-	reg [C_S_AXI_DATA_WIDTH-1:0] debug4 [DEBUG_LENGTH];
-	integer k;
-	always @(posedge fir_clk)
-	begin
-		if(switches[SWITCH_FIR_SNAP])
-		begin
-			debug4[0] <= debug4_in;
-			for(k = 1; k < DEBUG_LENGTH; k = k + 1) begin
-	            debug4[k] <= debug4[k-1];
-	        end
-	    end
-	end
-
-	wire [C_S_AXI_DATA_WIDTH-1:0] debug5_in;
-	reg [C_S_AXI_DATA_WIDTH-1:0] debug5 [DEBUG_LENGTH];
-	integer k;
-	always @(posedge fir_clk)
-	begin
-		if(switches[SWITCH_FIR_SNAP])
-		begin
-			debug5[0] <= debug5_in;
-			for(k = 1; k < DEBUG_LENGTH; k = k + 1) begin
-	            debug5[k] <= debug5[k-1];
-	        end
-	    end
-	end
-
-
-	wire [C_S_AXI_DATA_WIDTH-1:0] debug6_in;
-	reg [C_S_AXI_DATA_WIDTH-1:0] debug6 [DEBUG_LENGTH];
-	integer k;
-	always @(posedge fir_clk)
-	begin
-		if(switches[SWITCH_FIR_SNAP])
-		begin
-			debug6[0] <= debug6_in;
-			for(k = 1; k < DEBUG_LENGTH; k = k + 1) begin
-	            debug6[k] <= debug6[k-1];
-	        end
-	    end
-	end
-
-	wire [C_S_AXI_DATA_WIDTH-1:0] debug7_in;
-	reg [C_S_AXI_DATA_WIDTH-1:0] debug7 [DEBUG_LENGTH];
-	integer k;
-	always @(posedge fir_clk)
-	begin
-		if(switches[SWITCH_FIR_SNAP])
-		begin
-			debug7[0] <= debug7_in;
-			for(k = 1; k < DEBUG_LENGTH; k = k + 1) begin
-	            debug7[k] <= debug7[k-1];
-	        end
-	    end
-	end
-
-	wire [C_S_AXI_DATA_WIDTH-1:0] debug8_in;
-	reg [C_S_AXI_DATA_WIDTH-1:0] debug8 [DEBUG_LENGTH];
-	integer k;
-	always @(posedge fir_clk)
-	begin
-		if(switches[SWITCH_FIR_SNAP])
-		begin
-			debug8[0] <= debug8_in;
-			for(k = 1; k < DEBUG_LENGTH; k = k + 1) begin
-	            debug8[k] <= debug8[k-1];
-	        end
-	    end
-	end
-
-	wire [C_S_AXI_DATA_WIDTH-1:0] debug9_in;
-	reg [C_S_AXI_DATA_WIDTH-1:0] debug9 [DEBUG_LENGTH];
-	integer k;
-	always @(posedge fir_clk)
-	begin
-		if(switches[SWITCH_FIR_SNAP])
-		begin
-			debug9[0] <= debug9_in;
-			for(k = 1; k < DEBUG_LENGTH; k = k + 1) begin
-	            debug9[k] <= debug9[k-1];
-	        end
-	    end
-	end
-
-	wire [C_S_AXI_DATA_WIDTH-1:0] debug10_in;
-	reg [C_S_AXI_DATA_WIDTH-1:0] debug10 [DEBUG_LENGTH];
-	integer k;
-	always @(posedge fir_clk)
-	begin
-		if(switches[SWITCH_FIR_SNAP])
-		begin
-			debug10[0] <= debug10_in;
-			for(k = 1; k < DEBUG_LENGTH; k = k + 1) begin
-	            debug10[k] <= debug10[k-1];
-	        end
-	    end
-	end
-
+	wire [C_S_AXI_DATA_WIDTH-1:0] debug_in [DEBUG_DEPTH];
+	reg [C_S_AXI_DATA_WIDTH-1:0] debug [DEBUG_DEPTH][DEBUG_LENGTH];
 	wire [C_S_AXI_DATA_WIDTH-1:0] debug_block [DEBUG_LENGTH*DEBUG_DEPTH];
-	genvar ideb;
+
+	reg fir_snap; 
+	xpm_cdc_single fir_snap_cdc (
+		.src_clk(S_AXI_ACLK),
+		.src_in(switches[SWITCH_FIR_SNAP]),
+		.dest_clk(fir_clk),
+		.dest_out(fir_snap)
+	);
+
+	genvar m, n;
 	generate
-		for(ideb = 0; ideb < DEBUG_LENGTH; ideb = ideb + 1) begin
-			assign debug_block[ideb+(DEBUG_LENGTH*0)] = debug1[ideb];
-			assign debug_block[ideb+(DEBUG_LENGTH*1)] = debug2[ideb];
-			assign debug_block[ideb+(DEBUG_LENGTH*2)] = debug3[ideb];
-			assign debug_block[ideb+(DEBUG_LENGTH*3)] = debug4[ideb];
-			assign debug_block[ideb+(DEBUG_LENGTH*4)] = debug5[ideb];
-			assign debug_block[ideb+(DEBUG_LENGTH*5)] = debug6[ideb];
-			assign debug_block[ideb+(DEBUG_LENGTH*6)] = debug7[ideb];
-			assign debug_block[ideb+(DEBUG_LENGTH*7)] = debug8[ideb];
-			assign debug_block[ideb+(DEBUG_LENGTH*8)] = debug9[ideb];
-			assign debug_block[ideb+(DEBUG_LENGTH*9)] = debug10[ideb];
-		end
+		for(m = 0; m < DEBUG_DEPTH; m = m + 1)
+		begin
+			always @(posedge fir_clk)
+			begin
+				if(fir_snap)
+				begin
+					debug[m][0] <= debug_in[m];
+					for(int k = 1; k < DEBUG_LENGTH; k = k + 1) begin
+			            debug[m][k] <= debug[m][k-1];
+			        end
+			    end
+			end
+			for(n = 0; n < DEBUG_LENGTH; n = n + 1)
+			begin
+				assign debug_block[n+(DEBUG_LENGTH*m)] = debug[m][n];
+			end
+		end		
 	endgenerate
+
+
 
 	endmodule
