@@ -9,7 +9,7 @@
 		parameter FIR_COEF_MAG = 0,
 		parameter FIR_DSP_NR = 4, 
 		parameter FIR_TM = 2,
-		parameter UPSAMP_DATA_WIDTH_EXT = 0, //TODO: set this parameter as ip customizable or set some sensible value
+		parameter UPSAMP_DATA_WIDTH_EXT = 4, //TODO: set this parameter as ip customizable or set some sensible value
 		parameter UPSAMP_DSP_NR = 6,
 		// User parmaters end
 
