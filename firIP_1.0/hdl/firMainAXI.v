@@ -9,7 +9,8 @@
 		parameter FIR_COEF_MAG = 0,
 		parameter FIR_DSP_NR = 4, 
 		parameter FIR_TM = 2,
-
+		parameter UPSAMP_DATA_WIDTH_EXT = 0, //TODO: set this parameter as ip customizable or set some sensible value
+		parameter UPSAMP_DSP_NR = 6,
 		// User parmaters end
 
 		parameter integer C_S_AXI_DATA_WIDTH	= 32,
@@ -52,11 +53,13 @@
 	// ADDR_LSB = 3 for 64 bits addressing
 
 	localparam FIR_COEFS_NR = FIR_TM * FIR_DSP_NR;
+	localparam UPSAMP_COEFS_NR = FIR_TM * UPSAMP_DSP_NR;
 
 	localparam ADDR_LSB = (C_S_AXI_DATA_WIDTH/32) + 1;
 	// Addresses' bases in 32/64 bit addressing
 	localparam FIR_OFFSET_COEFS = 8;
-	localparam FIR_OFFSET_DEBUG = 128;
+	localparam FIR_OFFSET_UPSAMP_COEFS = 128;
+	localparam FIR_OFFSET_DEBUG = 256;
 	//reverse order xD
 	localparam PROG_NAME = "_RIF";
 	localparam PROG_VER = "2MT";
@@ -68,7 +71,10 @@
 	localparam SWITCH_FIR_SNAP = 5;
 	localparam SWITCH_FIR_DEBUG_1 = 6;
 	localparam SWITCH_FIR_DEBUG_2 = 7;
-	//Debug switches:
+
+	//TODO: Add address space testing
+
+
 
 	integer idx;
 
@@ -102,15 +108,16 @@
 	//read-only
 /*0*/    reg [C_S_AXI_DATA_WIDTH-1 : 0] info_1;
 /*1*/    reg [C_S_AXI_DATA_WIDTH-1 : 0] info_2; //TODO: add extra info,
-/*2*/    reg [C_S_AXI_DATA_WIDTH-1 : 0] coefs_max_nr;
-/*3*/    //reg [C_S_AXI_DATA_WIDTH-1 : 0] unused;
+/*2*/    reg [C_S_AXI_DATA_WIDTH-1 : 0] fir_coefs_max_nr;
+/*3*/    reg [C_S_AXI_DATA_WIDTH-1 : 0] upsamp_coefs_nr;
 	//write|read
 /*4*/    reg [C_S_AXI_DATA_WIDTH-1 : 0] switches;
-/*5*/    reg [C_S_AXI_DATA_WIDTH-1 : 0] coefs_crr_nr;
+/*5*/    reg [C_S_AXI_DATA_WIDTH-1 : 0] fir_coefs_crr_nr;
 /*6*/    //reg [C_S_AXI_DATA_WIDTH-1 : 0] unused;
 /*7*/    //reg [C_S_AXI_DATA_WIDTH-1 : 0] unused;
 
-	reg signed [FIR_COEF_WIDTH-1 : 0] coefs [FIR_COEFS_NR];
+	reg signed [FIR_COEF_WIDTH-1 : 0] fir_coefs [FIR_COEFS_NR];
+	reg signed [FIR_COEF_WIDTH-1 : 0] upsamp_coefs [UPSAMP_COEFS_NR];
 
 	/*Dozen of boring AXI4-lite procedures*/
 	always @( posedge S_AXI_ACLK ) begin
@@ -160,12 +167,17 @@
 		if (reg_wren & S_AXI_ARESETN) begin
 			for(idx = 0; idx < FIR_COEFS_NR; idx = idx + 1) begin
 				if(idx + FIR_OFFSET_COEFS == axi_awaddr)
-					coefs[idx] <= {S_AXI_WDATA[C_S_AXI_DATA_WIDTH-1],S_AXI_WDATA[FIR_COEF_WIDTH-2 : 0]};
+					fir_coefs[idx] <= {S_AXI_WDATA[C_S_AXI_DATA_WIDTH-1],S_AXI_WDATA[FIR_COEF_WIDTH-2 : 0]};
+			end
+
+			for(idx = 0; idx < UPSAMP_COEFS_NR; idx = idx + 1) begin
+				if(idx + FIR_OFFSET_UPSAMP_COEFS == axi_awaddr)
+					upsamp_coefs[idx] <= {S_AXI_WDATA[C_S_AXI_DATA_WIDTH-1],S_AXI_WDATA[FIR_COEF_WIDTH-2 : 0]};
 			end
 
 			case(axi_awaddr)
 				4: switches <= S_AXI_WDATA;
-				5: coefs_crr_nr <= S_AXI_WDATA;
+				5: fir_coefs_crr_nr <= S_AXI_WDATA;
 				//6: unused <= S_AXI_WDATA;
 				//7: unused <= S_AXI_WDATA;
 			endcase
@@ -226,10 +238,10 @@
 		case ( axi_araddr )
 		0 : reg_data_out = info_1;
 		1 : reg_data_out = info_2;
-		2 : reg_data_out = coefs_max_nr;
+		2 : reg_data_out = fir_coefs_max_nr;
 		// 3 : reg_data_out = unused;
 		4 : reg_data_out = switches;
-		5 : reg_data_out = coefs_crr_nr;
+		5 : reg_data_out = fir_coefs_crr_nr;
 		// 6 : reg_data_out = unused;
 		// 7 : reg_data_out = unused;
 		default : reg_data_out = 0;
@@ -250,7 +262,8 @@
 				axi_rdata <= reg_data_out;
 		end
 	end    
-
+	//Pudika kocha Pudimy :3 //
+	// NO LOGIC //
 	//-----------------------------------------------------//
 	//------------------------LOGIC------------------------//
 	//-----------------------------------------------------//
@@ -270,16 +283,16 @@
 	.count(count));
 
 	//counter connections wiring
-	wire [COUNT_WIDTH-1:0] dsp_con_count [FIR_DSP_NR + 1];
-	assign dsp_con_count[0] = count;
+	wire [COUNT_WIDTH-1:0] fir_con_count [FIR_DSP_NR + 1];
+	assign fir_con_count[0] = count;
 
 
 	/*---Partial sums and samples wirings---*/
 	localparam SUM_WIDTH = FIR_DATA_WIDTH + FIR_COEF_MAG; /*at the end, sum is shortened by COEFMAG to XW length,
 	so there is little reason to add more registers*/
 
-	wire signed [SUM_WIDTH-1:0] dsp_con_sum [FIR_DSP_NR:0]; //+1 because of beg and end, ex: ---DSP---DSP---DSP--- || note: 3 DSPs and 4 wires
-	wire signed [FIR_DATA_WIDTH-1:0] dsp_con_x [FIR_DSP_NR:0]; //same as above
+	wire signed [SUM_WIDTH-1:0] fir_con_sum [FIR_DSP_NR:0]; //+1 because of beg and end, ex: ---DSP---DSP---DSP--- || note: 3 DSPs and 4 wires
+	wire signed [FIR_DATA_WIDTH-1:0] fir_con_x [FIR_DSP_NR:0]; //same as above
 	
 	wire signed [SUM_WIDTH-1:0] sum_loop_end;
 	wire signed [FIR_DATA_WIDTH-1:0] data_loop_end;
@@ -290,11 +303,11 @@
 
 	shiftby #(.BY(LOOP_FEEDBACK_SYNC), .WIDTH(FIR_DATA_WIDTH))
 	shift_data_loop
-	(.in(dsp_con_x[FIR_DSP_NR]), .out(data_loop_end), .clk(fir_clk));
+	(.in(fir_con_x[FIR_DSP_NR]), .out(data_loop_end), .clk(fir_clk));
 
 	shiftby #(.BY(LOOP_FEEDBACK_SYNC), .WIDTH(SUM_WIDTH))
 	shift_sum_loop
-	(.in(dsp_con_sum[FIR_DSP_NR]), .out(sum_loop_end), .clk(fir_clk));
+	(.in(fir_con_sum[FIR_DSP_NR]), .out(sum_loop_end), .clk(fir_clk));
 
 	/*---...and samples multiplexing...---*/
 	loop_multplx #(
@@ -305,12 +318,12 @@
 	.count(count),
 	.in(fir_in),
 	.loop(data_loop_end),
-	.out(dsp_con_x[0])
+	.out(fir_con_x[0])
 	);
 
 	/*---...and sum multiplexing (with synchronization)---*/
 	localparam DSP_PIPELINE_DIFF = 1; // difference in registers from samples multiplexer
-	// to first summation in dsp block (so fresh sample would contribute to fresh 0 sum)
+	// to first summation in fir block (so fresh sample would contribute to fresh 0 sum)
 	wire [COUNT_WIDTH-1:0] sum_count;
 	shiftby #(.BY(DSP_PIPELINE_DIFF), .WIDTH(COUNT_WIDTH))
 	shift_sum_count 
@@ -324,7 +337,7 @@
 	.count(sum_count),
 	.in(0),
 	.loop(sum_loop_end),
-	.out(dsp_con_sum[0])
+	.out(fir_con_sum[0])
 	);
 	/*--------------------------------------*/
 
@@ -334,15 +347,15 @@
 
 	/*---Coefficients' wiring---*/
 
-	reg signed [FIR_COEF_WIDTH-1 : 0] coefs_pack [FIR_DSP_NR][FIR_TM];
+	reg signed [FIR_COEF_WIDTH-1 : 0] fir_coefs_pack [FIR_DSP_NR][FIR_TM];
 	genvar i_cp, j_cp;
 	for(i_cp = 0; i_cp < FIR_DSP_NR; i_cp = i_cp + 1) begin
 		for(j_cp = 0; j_cp < FIR_TM; j_cp = j_cp + 1) begin
-			assign coefs_pack[i_cp][j_cp] = coefs[FIR_DSP_NR * j_cp + i_cp];
+			assign fir_coefs_pack[i_cp][j_cp] = fir_coefs[FIR_DSP_NR * j_cp + i_cp];
 		end
 	end
 
-	wire signed [FIR_COEF_WIDTH-1 : 0] coef_crr [FIR_DSP_NR];
+	wire signed [FIR_COEF_WIDTH-1 : 0] fir_coef_crr [FIR_DSP_NR];
 	/*---------------------------------------*/
 
 	/*----------------Fir taps---------------*/
@@ -356,11 +369,11 @@
 			.SUM_SHIFT(1+FIR_TM)
 			) inst_tap(
 			.clk(fir_clk),
-			.inX(dsp_con_x[k]),
-			.outX(dsp_con_x[k+1]),
-			.inCoef(coef_crr[k]),
-			.inSum(dsp_con_sum[k]),
-			.outSum(dsp_con_sum[k+1])
+			.inX(fir_con_x[k]),
+			.outX(fir_con_x[k+1]),
+			.inCoef(fir_coef_crr[k]),
+			.inSum(fir_con_sum[k]),
+			.outSum(fir_con_sum[k+1])
 			);
 		end
 	endgenerate
@@ -373,32 +386,121 @@
 			.COEFW(FIR_COEF_WIDTH),
 			.TM(FIR_TM),
 			.CW(COUNT_WIDTH)
-			) inst_coef_multplx(
+			) inst_fir_coef_multplx(
 			.clk(fir_clk),
-			.counter_in(dsp_con_count[l]),
-			.counter_out(dsp_con_count[l+1]),
-			.coef_pack(coefs_pack[l]),
-			.coef_out(coef_crr[l])
+			.counter_in(fir_con_count[l]),
+			.counter_out(fir_con_count[l+1]),
+			.coef_pack(fir_coefs_pack[l]),
+			.coef_out(fir_coef_crr[l])
 			);
 		end
 	endgenerate
 	/*---------------------------------*/
 
-	/*---Output selection and shift---*/
-	reg signed [FIR_DATA_WIDTH-1:0]sum_loop_out;
-	reg [SUM_WIDTH-1:0]sum_loop_out_debug;
+	/*---Transition to upsampler---*/
+	localparam UPSAMP_DATA_WIDTH = FIR_DATA_WIDTH + UPSAMP_DATA_WIDTH_EXT;
+
+	reg signed [UPSAMP_DATA_WIDTH-1:0] upsamp_in;
+	reg [COUNT_WIDTH-1:0] upsamp_count;
 	always @(posedge fir_clk) begin
 		if(sum_count == 0)
-			sum_loop_out[FIR_DATA_WIDTH-1:0] <= sum_loop_end[SUM_WIDTH-1: SUM_WIDTH - FIR_DATA_WIDTH];
+			upsamp_in[UPSAMP_DATA_WIDTH-1:0] <= sum_loop_end[SUM_WIDTH-1: SUM_WIDTH - UPSAMP_DATA_WIDTH];
+	end
+	always @(posedge fir_clk) begin
+		upsamp_count <= sum_count; //counter must be shifted same way input is
 	end
 	/*--------------------------------*/
+	/*----------UPSAMPLER-------------*/
+	/*--------------------------------*/
+
+
+
+
+
+
+	//counter connections wiring
+	wire [COUNT_WIDTH-1:0] upsamp_con_count [UPSAMP_DSP_NR + 1];
+	assign upsamp_con_count[0] = upsamp_count;
+
+
+	/*---Partial sums and samples wirings---*/
+	localparam UPSAMP_SUM_WIDTH = UPSAMP_DATA_WIDTH + FIR_COEF_MAG; /*at the end, sum is shortened by COEFMAG to XW length,
+	so there is little reason to add more registers*/
+
+
+	wire signed [UPSAMP_SUM_WIDTH-1:0] upsamp_con_sum [UPSAMP_DSP_NR:0]; //+1 because of beg and end, ex: ---DSP---DSP---DSP--- || note: 3 DSPs and 4 wires
+	wire signed [UPSAMP_DATA_WIDTH-1:0] upsamp_con_x [UPSAMP_DSP_NR:0]; //same as above
+	//starting pipeline values
+	assign upsamp_con_x[0] = upsamp_in;
+	assign upsamp_con_sum[0] = 0;
+
+	
+	/*----------------------------------------------------------------------------------*/
+	/*Generating fir taps (DSP blocks + shifting registers + coefficients' multiplexers)*/
+	/*----------------------------------------------------------------------------------*/
+
+	/*---Coefficients' wiring---*/
+
+	reg signed [FIR_COEF_WIDTH-1 : 0] upsamp_coefs_pack [UPSAMP_DSP_NR][FIR_TM];
+	genvar i_ucp, j_ucp;
+	for(i_ucp = 0; i_ucp < UPSAMP_DSP_NR; i_ucp = i_ucp + 1) begin
+		for(j_ucp = 0; j_ucp < FIR_TM; j_ucp = j_ucp + 1) begin
+			assign upsamp_coefs_pack[i_ucp][j_ucp] = upsamp_coefs[FIR_TM * i_ucp + FIR_TM - j_ucp - 1]; //notice different wiring than in actual filter
+			// coefs are reversed because x1*a2 should be outputed sooner than x1*a1
+		end
+	end
+
+	wire signed [FIR_COEF_WIDTH-1 : 0] upsamp_coef_crr [UPSAMP_DSP_NR];
+
+	/*----------------Fir taps---------------*/
+	generate
+		for(genvar k = 0; k < UPSAMP_DSP_NR; k = k + 1) begin
+			firtap #(
+			.XW(UPSAMP_DATA_WIDTH),
+			.COEFW(FIR_COEF_WIDTH),
+			.OUTW(UPSAMP_SUM_WIDTH),
+			.SAMPLE_SHIFT(1),
+			.SUM_SHIFT(1+FIR_TM)
+			) inst_upsamp_tap(
+			.clk(fir_clk),
+			.inX(upsamp_con_x[k]),
+			.outX(upsamp_con_x[k+1]),
+			.inCoef(upsamp_coef_crr[k]),
+			.inSum(upsamp_con_sum[k]),
+			.outSum(upsamp_con_sum[k+1])
+			);
+		end
+	endgenerate
+	/*--------------------------------------*/
+
+	/*---Coefficients' multiplexing---*/
+	generate
+		for(genvar l = 0; l < UPSAMP_DSP_NR; l = l+1) begin
+			coef_multplx #(
+			.COEFW(FIR_COEF_WIDTH),
+			.TM(FIR_TM),
+			.CW(COUNT_WIDTH)
+			) inst_upsamp_coef_multplx(
+			.clk(fir_clk),
+			.counter_in(upsamp_con_count[l]),
+			.counter_out(upsamp_con_count[l+1]),
+			.coef_pack(upsamp_coefs_pack[l]),
+			.coef_out(upsamp_coef_crr[l])
+			);
+		end
+	endgenerate
+
+	/*---Upsampler output---*/
+	wire signed [FIR_DATA_WIDTH-1:0] upsampler_out;
+	assign upsampler_out[FIR_DATA_WIDTH-1:0] = upsamp_con_sum[UPSAMP_DSP_NR][UPSAMP_SUM_WIDTH-1: UPSAMP_SUM_WIDTH - FIR_DATA_WIDTH];
+
 
 	/*---Fir switch on/off---*/
 	always @(*)
 	begin
 		case (switches[SWITCH_FIR_EN])
 			1'b0	:	fir_out = fir_in;
-			1'b1	:	fir_out = sum_loop_out;
+			1'b1	:	fir_out = upsampler_out;
 			default	:	fir_out = 0;
 		endcase
 	end
@@ -406,7 +508,7 @@
 
 	/*-----Fir info------*/
 	always @(*) begin
-		coefs_max_nr = FIR_COEFS_NR;
+		fir_coefs_max_nr = FIR_COEFS_NR;
 		info_1 = PROG_NAME;
 		info_2 = PROG_VER; 
 	end
@@ -421,49 +523,49 @@
 	// generate
 	// 	for(genvar gva = 0; gva < 5; gva = gva + 1)
 	// 	begin
-	// 		assign debug_in[gva * 3] = dsp_con_sum[gva];
-	// 		assign debug_in[(gva * 3) + 1] = dsp_con_x[gva];
-	// 		assign debug_in[(gva * 3) + 2] = coef_crr[gva];
+	// 		assign debug_in[gva * 3] = fir_con_sum[gva];
+	// 		assign debug_in[(gva * 3) + 1] = fir_con_x[gva];
+	// 		assign debug_in[(gva * 3) + 2] = fir_coef_crr[gva];
 	// 	end		
 	// endgenerate
 
 
 
-	//assign debug_in[0] = dsp_con_sum[0 + DEBUG_DSP_FIRST];
-	// assign debug_in[1] = dsp_con_x[0 + DEBUG_DSP_FIRST];
-	// assign debug_in[2] = coef_crr[0 + DEBUG_DSP_FIRST];
-	// assign debug_in[3] = dsp_con_sum[1 + DEBUG_DSP_FIRST];
-	// assign debug_in[4] = dsp_con_x[1 + DEBUG_DSP_FIRST];
-	// assign debug_in[5] = coef_crr[1 + DEBUG_DSP_FIRST];	
-	// assign debug_in[6] = dsp_con_sum[2 + DEBUG_DSP_FIRST];
-	// assign debug_in[7] = dsp_con_x[2 + DEBUG_DSP_FIRST];
-	// assign debug_in[8] = coef_crr[2 + DEBUG_DSP_FIRST];	
-	// assign debug_in[9] = dsp_con_sum[3 + DEBUG_DSP_FIRST];
-	// assign debug_in[10] = dsp_con_x[3 + DEBUG_DSP_FIRST];
-	// assign debug_in[11] = coef_crr[3 + DEBUG_DSP_FIRST];	
-	// assign debug_in[12] = dsp_con_sum[4 + DEBUG_DSP_FIRST];
-	// assign debug_in[13] = dsp_con_x[4 + DEBUG_DSP_FIRST];
-	// assign debug_in[14] = coef_crr[4 + DEBUG_DSP_FIRST];	
-	// assign debug_in[15] = dsp_con_sum[5 + DEBUG_DSP_FIRST];
-	// assign debug_in[16] = dsp_con_x[5 + DEBUG_DSP_FIRST];
-	// assign debug_in[17] = coef_crr[5 + DEBUG_DSP_FIRST];	
-	// assign debug_in[18] = dsp_con_sum[6 + DEBUG_DSP_FIRST];
-	// assign debug_in[19] = dsp_con_x[6 + DEBUG_DSP_FIRST];
-	// assign debug_in[20] = coef_crr[6 + DEBUG_DSP_FIRST];	
-	// assign debug_in[21] = dsp_con_sum[7 + DEBUG_DSP_FIRST];
-	// assign debug_in[22] = dsp_con_x[7 + DEBUG_DSP_FIRST];
-	// assign debug_in[23] = coef_crr[7 + DEBUG_DSP_FIRST];	
-	// assign debug_in[24] = dsp_con_sum[8 + DEBUG_DSP_FIRST];
-	// assign debug_in[25] = dsp_con_x[8 + DEBUG_DSP_FIRST];
-	// assign debug_in[26] = coef_crr[8 + DEBUG_DSP_FIRST];	
-	// assign debug_in[27] = dsp_con_sum[9 + DEBUG_DSP_FIRST];
-	// assign debug_in[28] = dsp_con_x[9 + DEBUG_DSP_FIRST];
-	// assign debug_in[29] = coef_crr[9 + DEBUG_DSP_FIRST];
-	// assign debug_in[30] = dsp_con_sum[10 + DEBUG_DSP_FIRST];
+	//assign debug_in[0] = fir_con_sum[0 + DEBUG_DSP_FIRST];
+	// assign debug_in[1] = fir_con_x[0 + DEBUG_DSP_FIRST];
+	// assign debug_in[2] = fir_coef_crr[0 + DEBUG_DSP_FIRST];
+	// assign debug_in[3] = fir_con_sum[1 + DEBUG_DSP_FIRST];
+	// assign debug_in[4] = fir_con_x[1 + DEBUG_DSP_FIRST];
+	// assign debug_in[5] = fir_coef_crr[1 + DEBUG_DSP_FIRST];	
+	// assign debug_in[6] = fir_con_sum[2 + DEBUG_DSP_FIRST];
+	// assign debug_in[7] = fir_con_x[2 + DEBUG_DSP_FIRST];
+	// assign debug_in[8] = fir_coef_crr[2 + DEBUG_DSP_FIRST];	
+	// assign debug_in[9] = fir_con_sum[3 + DEBUG_DSP_FIRST];
+	// assign debug_in[10] = fir_con_x[3 + DEBUG_DSP_FIRST];
+	// assign debug_in[11] = fir_coef_crr[3 + DEBUG_DSP_FIRST];	
+	// assign debug_in[12] = fir_con_sum[4 + DEBUG_DSP_FIRST];
+	// assign debug_in[13] = fir_con_x[4 + DEBUG_DSP_FIRST];
+	// assign debug_in[14] = fir_coef_crr[4 + DEBUG_DSP_FIRST];	
+	// assign debug_in[15] = fir_con_sum[5 + DEBUG_DSP_FIRST];
+	// assign debug_in[16] = fir_con_x[5 + DEBUG_DSP_FIRST];
+	// assign debug_in[17] = fir_coef_crr[5 + DEBUG_DSP_FIRST];	
+	// assign debug_in[18] = fir_con_sum[6 + DEBUG_DSP_FIRST];
+	// assign debug_in[19] = fir_con_x[6 + DEBUG_DSP_FIRST];
+	// assign debug_in[20] = fir_coef_crr[6 + DEBUG_DSP_FIRST];	
+	// assign debug_in[21] = fir_con_sum[7 + DEBUG_DSP_FIRST];
+	// assign debug_in[22] = fir_con_x[7 + DEBUG_DSP_FIRST];
+	// assign debug_in[23] = fir_coef_crr[7 + DEBUG_DSP_FIRST];	
+	// assign debug_in[24] = fir_con_sum[8 + DEBUG_DSP_FIRST];
+	// assign debug_in[25] = fir_con_x[8 + DEBUG_DSP_FIRST];
+	// assign debug_in[26] = fir_coef_crr[8 + DEBUG_DSP_FIRST];	
+	// assign debug_in[27] = fir_con_sum[9 + DEBUG_DSP_FIRST];
+	// assign debug_in[28] = fir_con_x[9 + DEBUG_DSP_FIRST];
+	// assign debug_in[29] = fir_coef_crr[9 + DEBUG_DSP_FIRST];
+	// assign debug_in[30] = fir_con_sum[10 + DEBUG_DSP_FIRST];
 
 	assign debug_in[0] = fir_in;
 	assign debug_in[(DEBUG_DSP_STAGES*3)+1] = sum_loop_end;
-	assign debug_in[(DEBUG_DSP_STAGES*3)+2] = sum_loop_out;
+	assign debug_in[(DEBUG_DSP_STAGES*3)+2] = upsamp_con_sum[UPSAMP_DSP_NR];
 	//assign debug_in[(DEBUG_DSP_STAGES*3)+3] = fir_in;
 
 
@@ -507,7 +609,6 @@
 			end
 		end		
 	endgenerate
-
 
 
 	endmodule
