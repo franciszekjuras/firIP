@@ -409,14 +409,10 @@
 	always @(posedge fir_clk) begin
 		upsamp_count <= sum_count; //counter must be shifted same way input is
 	end
+
 	/*--------------------------------*/
 	/*----------UPSAMPLER-------------*/
 	/*--------------------------------*/
-
-
-
-
-
 
 	//counter connections wiring
 	wire [COUNT_WIDTH-1:0] upsamp_con_count [UPSAMP_DSP_NR + 1];
@@ -513,59 +509,45 @@
 		info_2 = PROG_VER; 
 	end
 	/*-------------------*/
-	
-	localparam DEBUG_DSP_STAGES = 0;
-	localparam DEBUG_DSP_FIRST = 0;
-	if(((DEBUG_DSP_STAGES * 3) + 2 + 1) > DEBUG_DEPTH)
-		$error(1, "Fatal elab. error: DEBUG_DEPTH must be at least %d.", ((DEBUG_DSP_STAGES * 3) + 1));
-	if((DEBUG_DSP_STAGES + DEBUG_DSP_FIRST) > FIR_DSP_NR)
-		$error(1, "Fatal elab. error: DEBUG_DSP_STAGES + DEBUG_DSP_FIRST must be smaller or equal to FIR_DSP_NR = %d.", FIR_DSP_NR);
-	// generate
-	// 	for(genvar gva = 0; gva < 5; gva = gva + 1)
-	// 	begin
-	// 		assign debug_in[gva * 3] = fir_con_sum[gva];
-	// 		assign debug_in[(gva * 3) + 1] = fir_con_x[gva];
-	// 		assign debug_in[(gva * 3) + 2] = fir_coef_crr[gva];
-	// 	end		
-	// endgenerate
 
 
 
-	//assign debug_in[0] = fir_con_sum[0 + DEBUG_DSP_FIRST];
-	// assign debug_in[1] = fir_con_x[0 + DEBUG_DSP_FIRST];
-	// assign debug_in[2] = fir_coef_crr[0 + DEBUG_DSP_FIRST];
-	// assign debug_in[3] = fir_con_sum[1 + DEBUG_DSP_FIRST];
-	// assign debug_in[4] = fir_con_x[1 + DEBUG_DSP_FIRST];
-	// assign debug_in[5] = fir_coef_crr[1 + DEBUG_DSP_FIRST];	
-	// assign debug_in[6] = fir_con_sum[2 + DEBUG_DSP_FIRST];
-	// assign debug_in[7] = fir_con_x[2 + DEBUG_DSP_FIRST];
-	// assign debug_in[8] = fir_coef_crr[2 + DEBUG_DSP_FIRST];	
-	// assign debug_in[9] = fir_con_sum[3 + DEBUG_DSP_FIRST];
-	// assign debug_in[10] = fir_con_x[3 + DEBUG_DSP_FIRST];
-	// assign debug_in[11] = fir_coef_crr[3 + DEBUG_DSP_FIRST];	
-	// assign debug_in[12] = fir_con_sum[4 + DEBUG_DSP_FIRST];
-	// assign debug_in[13] = fir_con_x[4 + DEBUG_DSP_FIRST];
-	// assign debug_in[14] = fir_coef_crr[4 + DEBUG_DSP_FIRST];	
-	// assign debug_in[15] = fir_con_sum[5 + DEBUG_DSP_FIRST];
-	// assign debug_in[16] = fir_con_x[5 + DEBUG_DSP_FIRST];
-	// assign debug_in[17] = fir_coef_crr[5 + DEBUG_DSP_FIRST];	
-	// assign debug_in[18] = fir_con_sum[6 + DEBUG_DSP_FIRST];
-	// assign debug_in[19] = fir_con_x[6 + DEBUG_DSP_FIRST];
-	// assign debug_in[20] = fir_coef_crr[6 + DEBUG_DSP_FIRST];	
-	// assign debug_in[21] = fir_con_sum[7 + DEBUG_DSP_FIRST];
-	// assign debug_in[22] = fir_con_x[7 + DEBUG_DSP_FIRST];
-	// assign debug_in[23] = fir_coef_crr[7 + DEBUG_DSP_FIRST];	
-	// assign debug_in[24] = fir_con_sum[8 + DEBUG_DSP_FIRST];
-	// assign debug_in[25] = fir_con_x[8 + DEBUG_DSP_FIRST];
-	// assign debug_in[26] = fir_coef_crr[8 + DEBUG_DSP_FIRST];	
-	// assign debug_in[27] = fir_con_sum[9 + DEBUG_DSP_FIRST];
-	// assign debug_in[28] = fir_con_x[9 + DEBUG_DSP_FIRST];
-	// assign debug_in[29] = fir_coef_crr[9 + DEBUG_DSP_FIRST];
-	// assign debug_in[30] = fir_con_sum[10 + DEBUG_DSP_FIRST];
+	//assign debug_in[0] = upsamp_con_sum[0];
+	assign debug_in[1] = upsamp_con_x[0];
+	assign debug_in[2] = upsamp_coef_crr[0];
+	assign debug_in[3] = upsamp_con_sum[1];
+	assign debug_in[4] = upsamp_con_x[1];
+	assign debug_in[5] = upsamp_coef_crr[1];	
+	assign debug_in[6] = upsamp_con_sum[2];
+	// assign debug_in[7] = fir_con_x[2];
+	// assign debug_in[8] = fir_coef_crr[2];	
+	// assign debug_in[9] = fir_con_sum[3];
+	// assign debug_in[10] = fir_con_x[3];
+	// assign debug_in[11] = fir_coef_crr[3];	
+	// assign debug_in[12] = fir_con_sum[4];
+	// assign debug_in[13] = fir_con_x[4];
+	// assign debug_in[14] = fir_coef_crr[4];	
+	// assign debug_in[15] = fir_con_sum[5];
+	// assign debug_in[16] = fir_con_x[5];
+	// assign debug_in[17] = fir_coef_crr[5];	
+	// assign debug_in[18] = fir_con_sum[6];
+	// assign debug_in[19] = fir_con_x[6];
+	// assign debug_in[20] = fir_coef_crr[6];	
+	// assign debug_in[21] = fir_con_sum[7];
+	// assign debug_in[22] = fir_con_x[7];
+	// assign debug_in[23] = fir_coef_crr[7];	
+	// assign debug_in[24] = fir_con_sum[8];
+	// assign debug_in[25] = fir_con_x[8];
+	// assign debug_in[26] = fir_coef_crr[8];	
+	// assign debug_in[27] = fir_con_sum[9];
+	// assign debug_in[28] = fir_con_x[9];
+	// assign debug_in[29] = fir_coef_crr[9];
+	// assign debug_in[30] = fir_con_sum[10];
 
 	assign debug_in[0] = fir_in;
-	assign debug_in[(DEBUG_DSP_STAGES*3)+1] = sum_loop_end;
-	assign debug_in[(DEBUG_DSP_STAGES*3)+2] = upsamp_con_sum[UPSAMP_DSP_NR];
+	assign debug_in[7] = sum_loop_end;
+	assign debug_in[8] = upsamp_con_sum[UPSAMP_DSP_NR];
+	assign debug_in[9] = fir_out;
 	//assign debug_in[(DEBUG_DSP_STAGES*3)+3] = fir_in;
 
 
@@ -574,8 +556,8 @@
 
 	// User logic ends
 
-	localparam DEBUG_LENGTH = 100;
-	localparam DEBUG_DEPTH = 3;
+	localparam DEBUG_LENGTH = 50;
+	localparam DEBUG_DEPTH = 10;
 
 	wire [C_S_AXI_DATA_WIDTH-1:0] debug_in [DEBUG_DEPTH];
 	reg [C_S_AXI_DATA_WIDTH-1:0] debug [DEBUG_DEPTH][DEBUG_LENGTH];
