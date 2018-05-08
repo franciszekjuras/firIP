@@ -239,7 +239,7 @@
 		0 : reg_data_out = info_1;
 		1 : reg_data_out = info_2;
 		2 : reg_data_out = fir_coefs_max_nr;
-		// 3 : reg_data_out = unused;
+		3 : reg_data_out = upsamp_coefs_nr;
 		4 : reg_data_out = switches;
 		5 : reg_data_out = fir_coefs_crr_nr;
 		// 6 : reg_data_out = unused;
@@ -505,6 +505,7 @@
 	/*-----Fir info------*/
 	always @(*) begin
 		fir_coefs_max_nr = FIR_COEFS_NR;
+		upsamp_coefs_nr = UPSAMP_COEFS_NR;
 		info_1 = PROG_NAME;
 		info_2 = PROG_VER; 
 	end
