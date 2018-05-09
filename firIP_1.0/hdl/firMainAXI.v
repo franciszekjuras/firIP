@@ -10,7 +10,7 @@
 		parameter FIR_DSP_NR = 4, 
 		parameter FIR_TM = 2,
 		parameter UPSAMP_DATA_WIDTH_EXT = 4, //TODO: set this parameter as ip customizable or set some sensible value
-		parameter UPSAMP_DSP_NR = 6,
+		parameter UPSAMP_DSP_NR = 10,
 		// User parmaters end
 
 		parameter integer C_S_AXI_DATA_WIDTH	= 32,
@@ -58,8 +58,8 @@
 	localparam ADDR_LSB = (C_S_AXI_DATA_WIDTH/32) + 1;
 	// Addresses' bases in 32/64 bit addressing
 	localparam FIR_OFFSET_COEFS = 8;
-	localparam FIR_OFFSET_UPSAMP_COEFS = 128;
-	localparam FIR_OFFSET_DEBUG = 256;
+	localparam FIR_OFFSET_UPSAMP_COEFS = 256;
+	localparam FIR_OFFSET_DEBUG = 300;
 	//reverse order xD
 	localparam PROG_NAME = "_RIF";
 	localparam PROG_VER = "2MT";
@@ -514,12 +514,12 @@
 
 
 	//assign debug_in[0] = upsamp_con_sum[0];
-	assign debug_in[1] = upsamp_con_x[0];
-	assign debug_in[2] = upsamp_coef_crr[0];
-	assign debug_in[3] = upsamp_con_sum[1];
-	assign debug_in[4] = upsamp_con_x[1];
-	assign debug_in[5] = upsamp_coef_crr[1];	
-	assign debug_in[6] = upsamp_con_sum[2];
+	// assign debug_in[1] = upsamp_con_x[0];
+	// assign debug_in[2] = upsamp_coef_crr[0];
+	// assign debug_in[3] = upsamp_con_sum[1];
+	// assign debug_in[4] = upsamp_con_x[1];
+	// assign debug_in[5] = upsamp_coef_crr[1];	
+	// assign debug_in[6] = upsamp_con_sum[2];
 	// assign debug_in[7] = fir_con_x[2];
 	// assign debug_in[8] = fir_coef_crr[2];	
 	// assign debug_in[9] = fir_con_sum[3];
@@ -546,9 +546,9 @@
 	// assign debug_in[30] = fir_con_sum[10];
 
 	assign debug_in[0] = fir_in;
-	assign debug_in[7] = sum_loop_end;
-	assign debug_in[8] = upsamp_con_sum[UPSAMP_DSP_NR];
-	assign debug_in[9] = fir_out;
+	assign debug_in[1] = fir_con_x[0];
+	assign debug_in[2] = upsamp_in;
+	assign debug_in[3] = fir_out;
 	//assign debug_in[(DEBUG_DSP_STAGES*3)+3] = fir_in;
 
 
@@ -557,12 +557,14 @@
 
 	// User logic ends
 
-	localparam DEBUG_LENGTH = 50;
-	localparam DEBUG_DEPTH = 10;
+	localparam DEBUG_LENGTH = 100;
+	localparam DEBUG_DEPTH = 4;
 
-	wire [C_S_AXI_DATA_WIDTH-1:0] debug_in [DEBUG_DEPTH];
-	reg [C_S_AXI_DATA_WIDTH-1:0] debug [DEBUG_DEPTH][DEBUG_LENGTH];
-	wire [C_S_AXI_DATA_WIDTH-1:0] debug_block [DEBUG_LENGTH*DEBUG_DEPTH];
+	localparam DEBUG_WIDTH = UPSAMP_DATA_WIDTH;
+
+	wire [DEBUG_WIDTH-1:0] debug_in [DEBUG_DEPTH];
+	reg [DEBUG_WIDTH-1:0] debug [DEBUG_DEPTH][DEBUG_LENGTH];
+	wire [DEBUG_WIDTH-1:0] debug_block [DEBUG_LENGTH*DEBUG_DEPTH];
 
 	reg fir_snap; 
 	xpm_cdc_single fir_snap_cdc (
