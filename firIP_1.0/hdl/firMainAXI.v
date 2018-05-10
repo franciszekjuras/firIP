@@ -562,9 +562,9 @@
 
 	localparam DEBUG_WIDTH = UPSAMP_DATA_WIDTH;
 
-	wire [DEBUG_WIDTH-1:0] debug_in [DEBUG_DEPTH];
-	reg [DEBUG_WIDTH-1:0] debug [DEBUG_DEPTH][DEBUG_LENGTH];
-	wire [DEBUG_WIDTH-1:0] debug_block [DEBUG_LENGTH*DEBUG_DEPTH];
+	wire signed [DEBUG_WIDTH-1:0] debug_in [DEBUG_DEPTH];
+	reg signed [DEBUG_WIDTH-1:0] debug [DEBUG_DEPTH][DEBUG_LENGTH];
+	wire signed [DEBUG_WIDTH-1:0] debug_block [DEBUG_LENGTH*DEBUG_DEPTH];
 
 	reg fir_snap; 
 	xpm_cdc_single fir_snap_cdc (
