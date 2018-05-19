@@ -58,8 +58,9 @@
 	localparam ADDR_LSB = (C_S_AXI_DATA_WIDTH/32) + 1;
 	// Addresses' bases in 32/64 bit addressing
 	localparam FIR_OFFSET_COEFS = 8;
-	localparam FIR_OFFSET_UPSAMP_COEFS = 256;
-	localparam FIR_OFFSET_DEBUG = 300;
+	localparam FIR_OFFSET_UPSAMP_COEFS = 2048;
+	localparam FIR_OFFSET_DEBUG = 2560;
+	//zmniejszyc adresy !!!
 	//reverse order xD
 	localparam PROG_NAME = "_RIF";
 	localparam PROG_VER = "2MT";
@@ -246,12 +247,11 @@
 		// 7 : reg_data_out = unused;
 		default : reg_data_out = 0;
 		endcase
-		/*IF COEFS STATUS IS NECESSARY*/
-		for(idx = 0; idx < (DEBUG_LENGTH*DEBUG_DEPTH); idx = idx + 1) begin
-			if(idx + FIR_OFFSET_DEBUG == axi_araddr) begin
-				reg_data_out = debug_block[idx]; //WARN:sign bit might not be shifted properly
-			end
-		end	   
+		// for(idx = 0; idx < (DEBUG_LENGTH*DEBUG_DEPTH); idx = idx + 1) begin
+		// 	if(idx + FIR_OFFSET_DEBUG == axi_araddr) begin
+		// 		reg_data_out = debug_block[idx]; //WARN:sign bit might not be shifted properly
+		// 	end
+		// end	   
 	end
 
 	always @( posedge S_AXI_ACLK ) begin
@@ -545,10 +545,22 @@
 	// assign debug_in[29] = fir_coef_crr[9];
 	// assign debug_in[30] = fir_con_sum[10];
 
-	assign debug_in[0] = fir_in;
-	assign debug_in[1] = fir_con_x[0];
-	assign debug_in[2] = upsamp_in;
-	assign debug_in[3] = fir_out;
+	// assign debug_in[0] = upsamp_coef_crr[0];
+	// assign debug_in[1] = upsamp_coef_crr[1];
+	// assign debug_in[2] = upsamp_coef_crr[2];
+	// assign debug_in[3] = upsamp_coef_crr[3];
+	// assign debug_in[4] = upsamp_coef_crr[4];
+	// assign debug_in[5] = upsamp_coef_crr[5];
+	// assign debug_in[6] = upsamp_coef_crr[6];
+	// assign debug_in[7] = upsamp_coef_crr[7];
+	// assign debug_in[8] = upsamp_coef_crr[8];
+	// assign debug_in[9] = upsamp_coef_crr[9];
+
+
+	// assign debug_in[0] = fir_in;
+	// assign debug_in[1] = fir_con_x[0];
+	// assign debug_in[2] = upsamp_in;
+	// assign debug_in[3] = fir_out;
 	//assign debug_in[(DEBUG_DSP_STAGES*3)+3] = fir_in;
 
 
@@ -557,43 +569,43 @@
 
 	// User logic ends
 
-	localparam DEBUG_LENGTH = 100;
-	localparam DEBUG_DEPTH = 4;
+	// localparam DEBUG_LENGTH = 5;
+	// localparam DEBUG_DEPTH = 10;
 
-	localparam DEBUG_WIDTH = UPSAMP_DATA_WIDTH;
+	// localparam DEBUG_WIDTH = UPSAMP_DATA_WIDTH;
 
-	wire signed [DEBUG_WIDTH-1:0] debug_in [DEBUG_DEPTH];
-	reg signed [DEBUG_WIDTH-1:0] debug [DEBUG_DEPTH][DEBUG_LENGTH];
-	wire signed [DEBUG_WIDTH-1:0] debug_block [DEBUG_LENGTH*DEBUG_DEPTH];
+	// wire signed [DEBUG_WIDTH-1:0] debug_in [DEBUG_DEPTH];
+	// reg signed [DEBUG_WIDTH-1:0] debug [DEBUG_DEPTH][DEBUG_LENGTH];
+	// wire signed [DEBUG_WIDTH-1:0] debug_block [DEBUG_LENGTH*DEBUG_DEPTH];
 
-	reg fir_snap; 
-	xpm_cdc_single fir_snap_cdc (
-		.src_clk(S_AXI_ACLK),
-		.src_in(switches[SWITCH_FIR_SNAP]),
-		.dest_clk(fir_clk),
-		.dest_out(fir_snap)
-	);
+	// reg fir_snap; 
+	// xpm_cdc_single fir_snap_cdc (
+	// 	.src_clk(S_AXI_ACLK),
+	// 	.src_in(switches[SWITCH_FIR_SNAP]),
+	// 	.dest_clk(fir_clk),
+	// 	.dest_out(fir_snap)
+	// );
 
-	genvar m, n;
-	generate
-		for(m = 0; m < DEBUG_DEPTH; m = m + 1)
-		begin
-			always @(posedge fir_clk)
-			begin
-				if(fir_snap)
-				begin
-					debug[m][0] <= debug_in[m];
-					for(int k = 1; k < DEBUG_LENGTH; k = k + 1) begin
-			            debug[m][k] <= debug[m][k-1];
-			        end
-			    end
-			end
-			for(n = 0; n < DEBUG_LENGTH; n = n + 1)
-			begin
-				assign debug_block[n+(DEBUG_LENGTH*m)] = debug[m][n];
-			end
-		end		
-	endgenerate
+	// genvar m, n;
+	// generate
+	// 	for(m = 0; m < DEBUG_DEPTH; m = m + 1)
+	// 	begin
+	// 		always @(posedge fir_clk)
+	// 		begin
+	// 			if(fir_snap)
+	// 			begin
+	// 				debug[m][0] <= debug_in[m];
+	// 				for(int k = 1; k < DEBUG_LENGTH; k = k + 1) begin
+	// 		            debug[m][k] <= debug[m][k-1];
+	// 		        end
+	// 		    end
+	// 		end
+	// 		for(n = 0; n < DEBUG_LENGTH; n = n + 1)
+	// 		begin
+	// 			assign debug_block[n+(DEBUG_LENGTH*m)] = debug[m][n];
+	// 		end
+	// 	end		
+	// endgenerate
 
 
 	endmodule
