@@ -11,22 +11,18 @@
       </db_ref>
    </db_ref_list>
    <zoom_setting>
-      <ZoomStartTime time="863383740fs"></ZoomStartTime>
-      <ZoomEndTime time="1166925574fs"></ZoomEndTime>
-      <Cursor1Time time="1249000000fs"></Cursor1Time>
+      <ZoomStartTime time="3184300259fs"></ZoomStartTime>
+      <ZoomEndTime time="3301928597fs"></ZoomEndTime>
+      <Cursor1Time time="6273000000fs"></Cursor1Time>
    </zoom_setting>
    <column_width_setting>
       <NameColumnWidth column_width="175"></NameColumnWidth>
-      <ValueColumnWidth column_width="134"></ValueColumnWidth>
+      <ValueColumnWidth column_width="122"></ValueColumnWidth>
    </column_width_setting>
-   <WVObjectSize size="59" />
+   <WVObjectSize size="56" />
    <wvobject type="array" fp_name="/fir_tb/coef_t">
       <obj_property name="ElementShortName">coef_t[17:0]</obj_property>
       <obj_property name="ObjectShortName">coef_t[17:0]</obj_property>
-   </wvobject>
-   <wvobject type="array" fp_name="/fir_tb/coef_count">
-      <obj_property name="ElementShortName">coef_count[31:0]</obj_property>
-      <obj_property name="ObjectShortName">coef_count[31:0]</obj_property>
    </wvobject>
    <wvobject type="array" fp_name="/fir_tb/out">
       <obj_property name="ElementShortName">out[31:0]</obj_property>
@@ -195,58 +191,13 @@
       <obj_property name="Radix">SIGNEDDECRADIX</obj_property>
    </wvobject>
    <wvobject type="array" fp_name="/fir_tb/firMainAXI_inst/sum_loop_end">
-      <obj_property name="ElementShortName">sum_loop_end[13:0]</obj_property>
-      <obj_property name="ObjectShortName">sum_loop_end[13:0]</obj_property>
+      <obj_property name="ElementShortName">sum_loop_end[29:0]</obj_property>
+      <obj_property name="ObjectShortName">sum_loop_end[29:0]</obj_property>
       <obj_property name="Radix">SIGNEDDECRADIX</obj_property>
    </wvobject>
    <wvobject type="array" fp_name="/fir_tb/firMainAXI_inst/count">
-      <obj_property name="ElementShortName">count[0:0]</obj_property>
-      <obj_property name="ObjectShortName">count[0:0]</obj_property>
-   </wvobject>
-   <wvobject type="array" fp_name="/fir_tb/firMainAXI_inst/dsp_con_x[0]">
-      <obj_property name="ElementShortName">[0][13:0]</obj_property>
-      <obj_property name="ObjectShortName">[0][13:0]</obj_property>
-      <obj_property name="Radix">SIGNEDDECRADIX</obj_property>
-   </wvobject>
-   <wvobject type="array" fp_name="/fir_tb/firMainAXI_inst/dsp_con_x[1]">
-      <obj_property name="ElementShortName">[1][13:0]</obj_property>
-      <obj_property name="ObjectShortName">[1][13:0]</obj_property>
-      <obj_property name="Radix">SIGNEDDECRADIX</obj_property>
-   </wvobject>
-   <wvobject type="array" fp_name="/fir_tb/firMainAXI_inst/dsp_con_x[2]">
-      <obj_property name="ElementShortName">[2][13:0]</obj_property>
-      <obj_property name="ObjectShortName">[2][13:0]</obj_property>
-      <obj_property name="Radix">SIGNEDDECRADIX</obj_property>
-   </wvobject>
-   <wvobject type="array" fp_name="/fir_tb/firMainAXI_inst/dsp_con_x[3]">
-      <obj_property name="ElementShortName">[3][13:0]</obj_property>
-      <obj_property name="ObjectShortName">[3][13:0]</obj_property>
-      <obj_property name="Radix">SIGNEDDECRADIX</obj_property>
-   </wvobject>
-   <wvobject type="array" fp_name="/fir_tb/firMainAXI_inst/dsp_con_sum[0]">
-      <obj_property name="ElementShortName">[0][13:0]</obj_property>
-      <obj_property name="ObjectShortName">[0][13:0]</obj_property>
-      <obj_property name="Radix">SIGNEDDECRADIX</obj_property>
-   </wvobject>
-   <wvobject type="array" fp_name="/fir_tb/firMainAXI_inst/dsp_con_sum[1]">
-      <obj_property name="ElementShortName">[1][13:0]</obj_property>
-      <obj_property name="ObjectShortName">[1][13:0]</obj_property>
-      <obj_property name="Radix">SIGNEDDECRADIX</obj_property>
-   </wvobject>
-   <wvobject type="array" fp_name="/fir_tb/firMainAXI_inst/dsp_con_sum[2]">
-      <obj_property name="ElementShortName">[2][13:0]</obj_property>
-      <obj_property name="ObjectShortName">[2][13:0]</obj_property>
-      <obj_property name="Radix">SIGNEDDECRADIX</obj_property>
-   </wvobject>
-   <wvobject type="array" fp_name="/fir_tb/firMainAXI_inst/dsp_con_sum[3]">
-      <obj_property name="ElementShortName">[3][13:0]</obj_property>
-      <obj_property name="ObjectShortName">[3][13:0]</obj_property>
-      <obj_property name="Radix">SIGNEDDECRADIX</obj_property>
-   </wvobject>
-   <wvobject type="array" fp_name="/fir_tb/firMainAXI_inst/dsp_con_sum[4]">
-      <obj_property name="ElementShortName">[4][13:0]</obj_property>
-      <obj_property name="ObjectShortName">[4][13:0]</obj_property>
-      <obj_property name="Radix">SIGNEDDECRADIX</obj_property>
+      <obj_property name="ElementShortName">count[1:0]</obj_property>
+      <obj_property name="ObjectShortName">count[1:0]</obj_property>
    </wvobject>
    <wvobject type="array" fp_name="/fir_tb/firMainAXI_inst/\genblk1[0].inst_tap /inX">
       <obj_property name="ElementShortName">inX[13:0]</obj_property>
@@ -264,13 +215,80 @@
       <obj_property name="Radix">SIGNEDDECRADIX</obj_property>
    </wvobject>
    <wvobject type="array" fp_name="/fir_tb/firMainAXI_inst/\genblk1[0].inst_tap /inSum">
-      <obj_property name="ElementShortName">inSum[13:0]</obj_property>
-      <obj_property name="ObjectShortName">inSum[13:0]</obj_property>
+      <obj_property name="ElementShortName">inSum[29:0]</obj_property>
+      <obj_property name="ObjectShortName">inSum[29:0]</obj_property>
       <obj_property name="Radix">SIGNEDDECRADIX</obj_property>
    </wvobject>
    <wvobject type="array" fp_name="/fir_tb/firMainAXI_inst/\genblk1[0].inst_tap /outSum">
-      <obj_property name="ElementShortName">outSum[13:0]</obj_property>
-      <obj_property name="ObjectShortName">outSum[13:0]</obj_property>
+      <obj_property name="ElementShortName">outSum[29:0]</obj_property>
+      <obj_property name="ObjectShortName">outSum[29:0]</obj_property>
+      <obj_property name="Radix">SIGNEDDECRADIX</obj_property>
+   </wvobject>
+   <wvobject type="array" fp_name="/fir_tb/firMainAXI_inst/fir_bram_en">
+      <obj_property name="ElementShortName">fir_bram_en[0:3]</obj_property>
+      <obj_property name="ObjectShortName">fir_bram_en[0:3]</obj_property>
+   </wvobject>
+   <wvobject type="array" fp_name="/fir_tb/firMainAXI_inst/fir_coef_crr">
+      <obj_property name="ElementShortName">fir_coef_crr[0:3][17:0]</obj_property>
+      <obj_property name="ObjectShortName">fir_coef_crr[0:3][17:0]</obj_property>
+      <obj_property name="Radix">SIGNEDDECRADIX</obj_property>
+      <wvobject type="array" fp_name="/fir_tb/firMainAXI_inst/fir_coef_crr[0]">
+         <obj_property name="ElementShortName">[0][17:0]</obj_property>
+         <obj_property name="ObjectShortName">[0][17:0]</obj_property>
+         <obj_property name="Radix">SIGNEDDECRADIX</obj_property>
+      </wvobject>
+      <wvobject type="array" fp_name="/fir_tb/firMainAXI_inst/fir_coef_crr[1]">
+         <obj_property name="ElementShortName">[1][17:0]</obj_property>
+         <obj_property name="ObjectShortName">[1][17:0]</obj_property>
+         <obj_property name="Radix">SIGNEDDECRADIX</obj_property>
+      </wvobject>
+      <wvobject type="array" fp_name="/fir_tb/firMainAXI_inst/fir_coef_crr[2]">
+         <obj_property name="ElementShortName">[2][17:0]</obj_property>
+         <obj_property name="ObjectShortName">[2][17:0]</obj_property>
+         <obj_property name="Radix">SIGNEDDECRADIX</obj_property>
+      </wvobject>
+      <wvobject type="array" fp_name="/fir_tb/firMainAXI_inst/fir_coef_crr[3]">
+         <obj_property name="ElementShortName">[3][17:0]</obj_property>
+         <obj_property name="ObjectShortName">[3][17:0]</obj_property>
+         <obj_property name="Radix">SIGNEDDECRADIX</obj_property>
+      </wvobject>
+      <wvobject type="array" fp_name="/fir_tb/firMainAXI_inst/fir_coef_crr[0]">
+         <obj_property name="ElementShortName">[0][17:0]</obj_property>
+         <obj_property name="ObjectShortName">[0][17:0]</obj_property>
+      </wvobject>
+      <wvobject type="array" fp_name="/fir_tb/firMainAXI_inst/fir_coef_crr[1]">
+         <obj_property name="ElementShortName">[1][17:0]</obj_property>
+         <obj_property name="ObjectShortName">[1][17:0]</obj_property>
+      </wvobject>
+      <wvobject type="array" fp_name="/fir_tb/firMainAXI_inst/fir_coef_crr[2]">
+         <obj_property name="ElementShortName">[2][17:0]</obj_property>
+         <obj_property name="ObjectShortName">[2][17:0]</obj_property>
+      </wvobject>
+      <wvobject type="array" fp_name="/fir_tb/firMainAXI_inst/fir_coef_crr[3]">
+         <obj_property name="ElementShortName">[3][17:0]</obj_property>
+         <obj_property name="ObjectShortName">[3][17:0]</obj_property>
+      </wvobject>
+   </wvobject>
+   <wvobject type="array" fp_name="/fir_tb/firMainAXI_inst/\genblk2[0].inst_fir_coef_multplx /coef_write">
+      <obj_property name="ElementShortName">coef_write[17:0]</obj_property>
+      <obj_property name="ObjectShortName">coef_write[17:0]</obj_property>
+   </wvobject>
+   <wvobject type="array" fp_name="/fir_tb/firMainAXI_inst/\genblk2[0].inst_fir_coef_multplx /coef_write_addr">
+      <obj_property name="ElementShortName">coef_write_addr[6:0]</obj_property>
+      <obj_property name="ObjectShortName">coef_write_addr[6:0]</obj_property>
+   </wvobject>
+   <wvobject type="logic" fp_name="/fir_tb/firMainAXI_inst/\genblk2[0].inst_fir_coef_multplx /coef_write_en">
+      <obj_property name="ElementShortName">coef_write_en</obj_property>
+      <obj_property name="ObjectShortName">coef_write_en</obj_property>
+   </wvobject>
+   <wvobject type="array" fp_name="/fir_tb/firMainAXI_inst/\genblk2[0].inst_fir_coef_multplx /coef_out">
+      <obj_property name="ElementShortName">coef_out[17:0]</obj_property>
+      <obj_property name="ObjectShortName">coef_out[17:0]</obj_property>
+      <obj_property name="Radix">SIGNEDDECRADIX</obj_property>
+   </wvobject>
+   <wvobject type="array" fp_name="/fir_tb/firMainAXI_inst/upsamp_in">
+      <obj_property name="ElementShortName">upsamp_in[17:0]</obj_property>
+      <obj_property name="ObjectShortName">upsamp_in[17:0]</obj_property>
       <obj_property name="Radix">SIGNEDDECRADIX</obj_property>
    </wvobject>
 </wave_config>

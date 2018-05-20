@@ -56,11 +56,12 @@
 	localparam UPSAMP_COEFS_NR = FIR_TM * UPSAMP_DSP_NR;
 
 	localparam ADDR_LSB = (C_S_AXI_DATA_WIDTH/32) + 1;
+	localparam ADDR_BRAM_WIDTH = 7;
+	localparam ADDR_DSP_WIDTH = C_S_AXI_ADDR_WIDTH - ADDR_BRAM_WIDTH - ADDR_LSB; //7
 	// Addresses' bases in 32/64 bit addressing
-	localparam FIR_OFFSET_COEFS = 8;
-	localparam FIR_OFFSET_UPSAMP_COEFS = 2048;
-	localparam FIR_OFFSET_DEBUG = 2560;
-	//zmniejszyc adresy !!!
+	localparam FIR_BASE_COEFS = 1;
+	localparam FIR_BASE_UPSAMP_COEFS = 81;
+	localparam FIR_OFFSET_DEBUG = 8;
 	//reverse order xD
 	localparam PROG_NAME = "_RIF";
 	localparam PROG_VER = "2MT";
@@ -104,6 +105,22 @@
 	assign S_AXI_RDATA	= axi_rdata;
 	assign S_AXI_RRESP	= axi_rresp;
 	assign S_AXI_RVALID	= axi_rvalid;
+
+	// addr separation
+	wire [ADDR_DSP_WIDTH-1:0] addr_dsp;
+	wire [ADDR_BRAM_WIDTH-1:0] addr_bram;
+	reg [ADDR_BRAM_WIDTH-1:0] coef_bram_addr;
+	reg signed [FIR_COEF_WIDTH-1:0] coef_bram_data;
+	reg fir_bram_en [FIR_DSP_NR];
+	reg upsamp_bram_en [UPSAMP_DSP_NR];
+	always @( posedge S_AXI_ACLK ) begin
+		coef_bram_addr <= addr_bram;
+	end
+	always @( posedge S_AXI_ACLK ) begin
+		coef_bram_data <= {S_AXI_WDATA[C_S_AXI_DATA_WIDTH-1],S_AXI_WDATA[FIR_COEF_WIDTH-2:0]};
+	end
+	assign addr_bram = axi_awaddr[ADDR_BRAM_WIDTH-1:0];
+	assign addr_dsp = axi_awaddr[ADDR_BRAM_WIDTH+ADDR_DSP_WIDTH-1:ADDR_BRAM_WIDTH];
 
 	// Registers connected to AXI
 	//read-only
@@ -166,14 +183,14 @@
 
 	always @( posedge S_AXI_ACLK ) begin: write_data
 		if (reg_wren & S_AXI_ARESETN) begin
-			for(idx = 0; idx < FIR_COEFS_NR; idx = idx + 1) begin
-				if(idx + FIR_OFFSET_COEFS == axi_awaddr)
-					fir_coefs[idx] <= {S_AXI_WDATA[C_S_AXI_DATA_WIDTH-1],S_AXI_WDATA[FIR_COEF_WIDTH-2 : 0]};
+			for(idx = 0; idx < FIR_DSP_NR; idx = idx + 1) begin
+				if(idx + FIR_BASE_COEFS == addr_dsp)
+					fir_bram_en[idx] <= 1'b1;
 			end
 
-			for(idx = 0; idx < UPSAMP_COEFS_NR; idx = idx + 1) begin
-				if(idx + FIR_OFFSET_UPSAMP_COEFS == axi_awaddr)
-					upsamp_coefs[idx] <= {S_AXI_WDATA[C_S_AXI_DATA_WIDTH-1],S_AXI_WDATA[FIR_COEF_WIDTH-2 : 0]};
+			for(idx = 0; idx < UPSAMP_DSP_NR; idx = idx + 1) begin
+				if(idx + FIR_BASE_UPSAMP_COEFS == addr_dsp)
+					upsamp_bram_en[idx] <= 1'b1;
 			end
 
 			case(axi_awaddr)
@@ -182,6 +199,13 @@
 				//6: unused <= S_AXI_WDATA;
 				//7: unused <= S_AXI_WDATA;
 			endcase
+		end else begin
+			for(idx = 0; idx < FIR_DSP_NR; idx = idx + 1) begin
+				fir_bram_en[idx] <= 1'b0;
+			end
+			for(idx = 0; idx < UPSAMP_DSP_NR; idx = idx + 1) begin
+				upsamp_bram_en[idx] <= 1'b0;
+			end
 		end
 	end    
 
@@ -274,17 +298,20 @@
 	//COUNTER
 	localparam COUNT_WIDTH = $clog2(FIR_TM);
 	wire [COUNT_WIDTH-1:0] count;
+	wire [COUNT_WIDTH-1:0] count_origin;
 
 	counter #(
 	.COUNT_WIDTH(COUNT_WIDTH),
 	.MODULO(FIR_TM)) 
 	inst_counter (
 	.clk(fir_clk),
-	.count(count));
+	.count(count_origin));
 
 	//counter connections wiring
 	wire [COUNT_WIDTH-1:0] fir_con_count [FIR_DSP_NR + 1];
-	assign fir_con_count[0] = count;
+	assign fir_con_count[0] = count_origin;
+	shiftby #(.BY(2), .WIDTH(COUNT_WIDTH)) shift_count_origin
+	(.in(count_origin), .out(count), .clk(fir_clk));
 
 
 	/*---Partial sums and samples wirings---*/
@@ -347,14 +374,6 @@
 
 	/*---Coefficients' wiring---*/
 
-	reg signed [FIR_COEF_WIDTH-1 : 0] fir_coefs_pack [FIR_DSP_NR][FIR_TM];
-	genvar i_cp, j_cp;
-	for(i_cp = 0; i_cp < FIR_DSP_NR; i_cp = i_cp + 1) begin
-		for(j_cp = 0; j_cp < FIR_TM; j_cp = j_cp + 1) begin
-			assign fir_coefs_pack[i_cp][j_cp] = fir_coefs[FIR_DSP_NR * j_cp + i_cp];
-		end
-	end
-
 	wire signed [FIR_COEF_WIDTH-1 : 0] fir_coef_crr [FIR_DSP_NR];
 	/*---------------------------------------*/
 
@@ -384,13 +403,17 @@
 		for(genvar l = 0; l < FIR_DSP_NR; l = l+1) begin
 			coef_multplx #(
 			.COEFW(FIR_COEF_WIDTH),
+			.AW(ADDR_BRAM_WIDTH),
 			.TM(FIR_TM),
 			.CW(COUNT_WIDTH)
 			) inst_fir_coef_multplx(
-			.clk(fir_clk),
+			.clkw(S_AXI_ACLK),
+			.clkr(fir_clk),
 			.counter_in(fir_con_count[l]),
 			.counter_out(fir_con_count[l+1]),
-			.coef_pack(fir_coefs_pack[l]),
+			.coef_write(coef_bram_data),
+			.coef_write_addr(coef_bram_addr),
+			.coef_write_en(fir_bram_en[l]),
 			.coef_out(fir_coef_crr[l])
 			);
 		end
@@ -401,14 +424,17 @@
 	localparam UPSAMP_DATA_WIDTH = FIR_DATA_WIDTH + UPSAMP_DATA_WIDTH_EXT;
 
 	reg signed [UPSAMP_DATA_WIDTH-1:0] upsamp_in;
-	reg [COUNT_WIDTH-1:0] upsamp_count;
+	reg signed [UPSAMP_DATA_WIDTH-1:0] upsamp_in_1;
+	wire [COUNT_WIDTH-1:0] upsamp_count;
 	always @(posedge fir_clk) begin
 		if(sum_count == 0)
-			upsamp_in[UPSAMP_DATA_WIDTH-1:0] <= sum_loop_end[SUM_WIDTH-1: SUM_WIDTH - UPSAMP_DATA_WIDTH];
+			upsamp_in_1[UPSAMP_DATA_WIDTH-1:0] <= sum_loop_end[SUM_WIDTH-1: SUM_WIDTH - UPSAMP_DATA_WIDTH];
 	end
 	always @(posedge fir_clk) begin
-		upsamp_count <= sum_count; //counter must be shifted same way input is
+		upsamp_in <= upsamp_in_1;
 	end
+	//data is shifted 2 times relative to counter
+	assign upsamp_count = sum_count;
 
 	/*--------------------------------*/
 	/*----------UPSAMPLER-------------*/
@@ -436,15 +462,6 @@
 	/*----------------------------------------------------------------------------------*/
 
 	/*---Coefficients' wiring---*/
-
-	reg signed [FIR_COEF_WIDTH-1 : 0] upsamp_coefs_pack [UPSAMP_DSP_NR][FIR_TM];
-	genvar i_ucp, j_ucp;
-	for(i_ucp = 0; i_ucp < UPSAMP_DSP_NR; i_ucp = i_ucp + 1) begin
-		for(j_ucp = 0; j_ucp < FIR_TM; j_ucp = j_ucp + 1) begin
-			assign upsamp_coefs_pack[i_ucp][j_ucp] = upsamp_coefs[FIR_TM * i_ucp + FIR_TM - j_ucp - 1]; //notice different wiring than in actual filter
-			// coefs are reversed because x1*a2 should be outputed sooner than x1*a1
-		end
-	end
 
 	wire signed [FIR_COEF_WIDTH-1 : 0] upsamp_coef_crr [UPSAMP_DSP_NR];
 
@@ -474,13 +491,17 @@
 		for(genvar l = 0; l < UPSAMP_DSP_NR; l = l+1) begin
 			coef_multplx #(
 			.COEFW(FIR_COEF_WIDTH),
+			.AW(ADDR_BRAM_WIDTH),
 			.TM(FIR_TM),
 			.CW(COUNT_WIDTH)
 			) inst_upsamp_coef_multplx(
-			.clk(fir_clk),
+			.clkw(S_AXI_ACLK),
+			.clkr(fir_clk),
 			.counter_in(upsamp_con_count[l]),
 			.counter_out(upsamp_con_count[l+1]),
-			.coef_pack(upsamp_coefs_pack[l]),
+			.coef_write(coef_bram_data),
+			.coef_write_addr(coef_bram_addr),
+			.coef_write_en(upsamp_bram_en[l]),
 			.coef_out(upsamp_coef_crr[l])
 			);
 		end
