@@ -1,7 +1,7 @@
 `timescale 1ns / 1ps
 
 module firtap
-    #(parameter XW = 25, COEFW = 18, OUTW = 48, SAMPLE_SHIFT = 1, SUM_SHIFT = 2) //max parameters
+    #(parameter XW = 18, COEFW = 25, OUTW = 48, SAMPLE_SHIFT = 1, SUM_SHIFT = 2) //max parameters
     (
     input wire clk,
     input wire [XW-1:0] inX,
@@ -16,18 +16,21 @@ module firtap
 
     shiftby #(.BY(SAMPLE_SHIFT),.WIDTH(XW)) shiftX (.in(inX), .out(outX), .clk(clk));
     shiftby #(.BY(SUM_SHIFT - SUM_LATENCY),.WIDTH(OUTW)) shiftS (.in(sum), .out(outSum), .clk(clk));
+    // always @(posedge clk) begin
+    //     outX <= inX;
+    // end
     
     MACC_MACRO #(
     .DEVICE("7SERIES"),
     .LATENCY(3),
-    .WIDTH_A(XW),
-    .WIDTH_B(COEFW),
+    .WIDTH_A(COEFW),
+    .WIDTH_B(XW),
     .WIDTH_P(OUTW)
     ) macc_inst (
     .P(sum),
-    .A(inX),
+    .A(inCoef),
     .ADDSUB(1'b1),
-    .B(inCoef),
+    .B(inX),
     .CARRYIN(1'b0),
     .CE(1'b1),
     .CLK(clk),

@@ -4,13 +4,18 @@
 	module firMainAXI #
 	(
 		// Users to add parameters here
-		parameter FIR_DATA_WIDTH = 14,
+		parameter FIR_DSP_NR = 40, 
+		parameter TM = 16,
+		parameter INPUT_DATA_WIDTH = 14,
+		parameter OUTPUT_DATA_WIDTH = 14,
 		parameter FIR_COEF_WIDTH = 18,
-		parameter FIR_COEF_MAG = 0,
-		parameter FIR_DSP_NR = 4, 
-		parameter FIR_TM = 2,
-		parameter UPSAMP_DATA_WIDTH_EXT = 4, //TODO: set this parameter as ip customizable or set some sensible value
-		parameter UPSAMP_DSP_NR = 10,
+		parameter FIR_COEF_MAG = 17,
+		parameter SRC_COEF_WIDTH = 18,
+		parameter SRC_COEF_MAG = 17,
+		parameter DWSAMP_DSP_NR = 10,
+		parameter UPSAMP_DSP_NR = 0,
+		parameter FIR_IN_WIDTH_EXT = 0,
+		parameter UPSAMP_IN_WIDTH_EXT = 0,
 		// User parmaters end
 
 		parameter integer C_S_AXI_DATA_WIDTH	= 32,
@@ -52,31 +57,31 @@
 	// ADDR_LSB = 2 for 32 bits addressing
 	// ADDR_LSB = 3 for 64 bits addressing
 
-	localparam FIR_COEFS_NR = FIR_TM * FIR_DSP_NR;
-	localparam UPSAMP_COEFS_NR = FIR_TM * UPSAMP_DSP_NR;
+	// Widths:
+	localparam DWSAMP_DATA_WIDTH = INPUT_DATA_WIDTH;
+	localparam FIR_DATA_WIDTH = DWSAMP_DATA_WIDTH + FIR_IN_WIDTH_EXT;
+	localparam UPSAMP_DATA_WIDTH = FIR_DATA_WIDTH + UPSAMP_IN_WIDTH_EXT;
+
+	localparam FIR_COEFS_NR = TM * FIR_DSP_NR;
+	localparam UPSAMP_COEFS_NR = TM * UPSAMP_DSP_NR;
+	localparam DWSAMP_COEFS_NR = TM * DWSAMP_DSP_NR;
 
 	localparam ADDR_LSB = (C_S_AXI_DATA_WIDTH/32) + 1;
-	localparam ADDR_BRAM_WIDTH = 7;
-	localparam ADDR_DSP_WIDTH = C_S_AXI_ADDR_WIDTH - ADDR_BRAM_WIDTH - ADDR_LSB; //7
+	localparam BRAM_ADDR_WIDTH = 7;
+	localparam DSP_ADDR_WIDTH = C_S_AXI_ADDR_WIDTH - BRAM_ADDR_WIDTH - ADDR_LSB; //7
 	// Addresses' bases in 32/64 bit addressing
-	localparam FIR_BASE_COEFS = 1;
-	localparam FIR_BASE_UPSAMP_COEFS = 81;
-	localparam FIR_OFFSET_DEBUG = 8;
+	localparam FIR_COEFS_BASE = 1;
+	localparam UPSAMP_COEFS_BASE = 81;
+	localparam DWSAMP_COEFS_BASE = 101;
+	localparam FIR_DEBUG_OFFSET = 32;
 	//reverse order xD
 	localparam PROG_NAME = "_RIF";
-	localparam PROG_VER = "2MT";
+	localparam PROG_VER = "0.2";
 
 	//Switches:
 	localparam SWITCH_CON_EST = 0;
 	localparam SWITCH_FIR_EN = 1;
-	localparam SWITCH_FIR_UPDATE = 2;
 	localparam SWITCH_FIR_SNAP = 5;
-	localparam SWITCH_FIR_DEBUG_1 = 6;
-	localparam SWITCH_FIR_DEBUG_2 = 7;
-
-	//TODO: Add address space testing
-
-
 
 	integer idx;
 
@@ -107,35 +112,29 @@
 	assign S_AXI_RVALID	= axi_rvalid;
 
 	// addr separation
-	wire [ADDR_DSP_WIDTH-1:0] addr_dsp;
-	wire [ADDR_BRAM_WIDTH-1:0] addr_bram;
-	reg [ADDR_BRAM_WIDTH-1:0] coef_bram_addr;
-	reg signed [FIR_COEF_WIDTH-1:0] coef_bram_data;
+	wire [DSP_ADDR_WIDTH-1:0] addr_dsp;
+	wire [BRAM_ADDR_WIDTH-1:0] addr_bram;
+	reg [BRAM_ADDR_WIDTH-1:0] coef_bram_addr;
+	reg signed [FIR_COEF_WIDTH-1:0] fir_coef_bram_data;
+	reg signed [SRC_COEF_WIDTH-1:0] src_coef_bram_data;
 	reg fir_bram_en [FIR_DSP_NR];
 	reg upsamp_bram_en [UPSAMP_DSP_NR];
 	always @( posedge S_AXI_ACLK ) begin
 		coef_bram_addr <= addr_bram;
 	end
 	always @( posedge S_AXI_ACLK ) begin
-		coef_bram_data <= {S_AXI_WDATA[C_S_AXI_DATA_WIDTH-1],S_AXI_WDATA[FIR_COEF_WIDTH-2:0]};
+		fir_coef_bram_data <= {S_AXI_WDATA[C_S_AXI_DATA_WIDTH-1],S_AXI_WDATA[FIR_COEF_WIDTH-2:0]};
 	end
-	assign addr_bram = axi_awaddr[ADDR_BRAM_WIDTH-1:0];
-	assign addr_dsp = axi_awaddr[ADDR_BRAM_WIDTH+ADDR_DSP_WIDTH-1:ADDR_BRAM_WIDTH];
+	always @( posedge S_AXI_ACLK ) begin
+		src_coef_bram_data <= {S_AXI_WDATA[C_S_AXI_DATA_WIDTH-1],S_AXI_WDATA[SRC_COEF_WIDTH-2:0]};
+	end
+	assign addr_bram = axi_awaddr[BRAM_ADDR_WIDTH-1:0];
+	assign addr_dsp = axi_awaddr[BRAM_ADDR_WIDTH+DSP_ADDR_WIDTH-1:BRAM_ADDR_WIDTH];
 
 	// Registers connected to AXI
-	//read-only
-/*0*/    reg [C_S_AXI_DATA_WIDTH-1 : 0] info_1;
-/*1*/    reg [C_S_AXI_DATA_WIDTH-1 : 0] info_2; //TODO: add extra info,
-/*2*/    reg [C_S_AXI_DATA_WIDTH-1 : 0] fir_coefs_max_nr;
-/*3*/    reg [C_S_AXI_DATA_WIDTH-1 : 0] upsamp_coefs_nr;
-	//write|read
-/*4*/    reg [C_S_AXI_DATA_WIDTH-1 : 0] switches;
-/*5*/    reg [C_S_AXI_DATA_WIDTH-1 : 0] fir_coefs_crr_nr;
-/*6*/    //reg [C_S_AXI_DATA_WIDTH-1 : 0] unused;
-/*7*/    //reg [C_S_AXI_DATA_WIDTH-1 : 0] unused;
 
-	reg signed [FIR_COEF_WIDTH-1 : 0] fir_coefs [FIR_COEFS_NR];
-	reg signed [FIR_COEF_WIDTH-1 : 0] upsamp_coefs [UPSAMP_COEFS_NR];
+/*20*/    reg [C_S_AXI_DATA_WIDTH-1 : 0] switches;
+/*21*/    reg [C_S_AXI_DATA_WIDTH-1 : 0] fir_coefs_crr_nr;
 
 	/*Dozen of boring AXI4-lite procedures*/
 	always @( posedge S_AXI_ACLK ) begin
@@ -184,20 +183,18 @@
 	always @( posedge S_AXI_ACLK ) begin: write_data
 		if (reg_wren & S_AXI_ARESETN) begin
 			for(idx = 0; idx < FIR_DSP_NR; idx = idx + 1) begin
-				if(idx + FIR_BASE_COEFS == addr_dsp)
+				if(idx + FIR_COEFS_BASE == addr_dsp)
 					fir_bram_en[idx] <= 1'b1;
 			end
 
 			for(idx = 0; idx < UPSAMP_DSP_NR; idx = idx + 1) begin
-				if(idx + FIR_BASE_UPSAMP_COEFS == addr_dsp)
+				if(idx + UPSAMP_COEFS_BASE == addr_dsp)
 					upsamp_bram_en[idx] <= 1'b1;
 			end
 
 			case(axi_awaddr)
-				4: switches <= S_AXI_WDATA;
-				5: fir_coefs_crr_nr <= S_AXI_WDATA;
-				//6: unused <= S_AXI_WDATA;
-				//7: unused <= S_AXI_WDATA;
+				20: switches <= S_AXI_WDATA;
+				21: fir_coefs_crr_nr <= S_AXI_WDATA;
 			endcase
 		end else begin
 			for(idx = 0; idx < FIR_DSP_NR; idx = idx + 1) begin
@@ -261,14 +258,28 @@
 	begin
 		// Address decoding for reading registers
 		case ( axi_araddr )
-		0 : reg_data_out = info_1;
-		1 : reg_data_out = info_2;
-		2 : reg_data_out = fir_coefs_max_nr;
-		3 : reg_data_out = upsamp_coefs_nr;
-		4 : reg_data_out = switches;
-		5 : reg_data_out = fir_coefs_crr_nr;
-		// 6 : reg_data_out = unused;
-		// 7 : reg_data_out = unused;
+		0 : reg_data_out = PROG_NAME;
+		1 : reg_data_out = PROG_VER;
+
+		4 : reg_data_out = FIR_COEFS_NR;
+		5 : reg_data_out = UPSAMP_COEFS_NR;
+		6 : reg_data_out = DWSAMP_COEFS_NR;
+
+		8 : reg_data_out = TM;
+		9 : reg_data_out = FIR_DSP_NR;
+		10: reg_data_out = UPSAMP_DSP_NR;
+		11: reg_data_out = DWSAMP_DSP_NR;
+
+		12: reg_data_out = FIR_COEF_MAG;
+		13: reg_data_out = SRC_COEF_MAG;
+
+		16: reg_data_out = FIR_COEFS_BASE;
+		17: reg_data_out = UPSAMP_COEFS_BASE;
+		18: reg_data_out = DWSAMP_COEFS_BASE;
+
+		20 : reg_data_out = switches;
+		21 : reg_data_out = fir_coefs_crr_nr;
+
 		default : reg_data_out = 0;
 		endcase
 		// for(idx = 0; idx < (DEBUG_LENGTH*DEBUG_DEPTH); idx = idx + 1) begin
@@ -286,8 +297,6 @@
 				axi_rdata <= reg_data_out;
 		end
 	end    
-	//Pudika kocha Pudimy :3 //
-	// NO LOGIC //
 	//-----------------------------------------------------//
 	//------------------------LOGIC------------------------//
 	//-----------------------------------------------------//
@@ -296,43 +305,43 @@
 	assign leds_out[7:0] = switches[7:0];
 
 	//COUNTER
-	localparam COUNT_WIDTH = $clog2(FIR_TM);
-	wire [COUNT_WIDTH-1:0] count;
-	wire [COUNT_WIDTH-1:0] count_origin;
+	localparam COUNT_WIDTH = $clog2(TM);
+	wire [COUNT_WIDTH-1:0] count_fir_x;
+	wire [COUNT_WIDTH-1:0] count_fir_coefs;
 
 	counter #(
 	.COUNT_WIDTH(COUNT_WIDTH),
-	.MODULO(FIR_TM)) 
+	.MODULO(TM)) 
 	inst_counter (
 	.clk(fir_clk),
-	.count(count_origin));
+	.count(count_fir_coefs));
 
 	//counter connections wiring
 	wire [COUNT_WIDTH-1:0] fir_con_count [FIR_DSP_NR + 1];
-	assign fir_con_count[0] = count_origin;
+	assign fir_con_count[0] = count_fir_coefs;
 	shiftby #(.BY(2), .WIDTH(COUNT_WIDTH)) shift_count_origin
-	(.in(count_origin), .out(count), .clk(fir_clk));
+	(.in(count_fir_coefs), .out(count_fir_x), .clk(fir_clk));
 
 
-	/*---Partial sums and samples wirings---*/
-	localparam SUM_WIDTH = FIR_DATA_WIDTH + FIR_COEF_MAG; /*at the end, sum is shortened by COEFMAG to XW length,
+	/*---Partial sums and samples wirings---*/ 
+	localparam FIR_SUM_WIDTH = FIR_DATA_WIDTH + FIR_COEF_MAG; /*at the end, sum is shortened by COEFMAG to XW length,
 	so there is little reason to add more registers*/
 
-	wire signed [SUM_WIDTH-1:0] fir_con_sum [FIR_DSP_NR:0]; //+1 because of beg and end, ex: ---DSP---DSP---DSP--- || note: 3 DSPs and 4 wires
+	wire signed [FIR_SUM_WIDTH-1:0] fir_con_sum [FIR_DSP_NR:0]; //+1 because of beg and end, ex: ---DSP---DSP---DSP--- || note: 3 DSPs and 4 wires
 	wire signed [FIR_DATA_WIDTH-1:0] fir_con_x [FIR_DSP_NR:0]; //same as above
 	
-	wire signed [SUM_WIDTH-1:0] sum_loop_end;
+	wire signed [FIR_SUM_WIDTH-1:0] sum_loop_end;
 	wire signed [FIR_DATA_WIDTH-1:0] data_loop_end;
 	/*---------------------------------------*/
 
 	/*---Loop shift (synchronization)... and multiplexing---*/
-	localparam LOOP_FEEDBACK_SYNC = FIR_TM + 1 - (FIR_DSP_NR%FIR_TM);
+	localparam LOOP_FEEDBACK_SYNC = TM + 1 - (FIR_DSP_NR%TM);
 
 	shiftby #(.BY(LOOP_FEEDBACK_SYNC), .WIDTH(FIR_DATA_WIDTH))
 	shift_data_loop
 	(.in(fir_con_x[FIR_DSP_NR]), .out(data_loop_end), .clk(fir_clk));
 
-	shiftby #(.BY(LOOP_FEEDBACK_SYNC), .WIDTH(SUM_WIDTH))
+	shiftby #(.BY(LOOP_FEEDBACK_SYNC), .WIDTH(FIR_SUM_WIDTH))
 	shift_sum_loop
 	(.in(fir_con_sum[FIR_DSP_NR]), .out(sum_loop_end), .clk(fir_clk));
 
@@ -342,7 +351,7 @@
 	.DATA_WIDTH(FIR_DATA_WIDTH)	
 	) 
 	inst_in_multplx (
-	.count(count),
+	.count(count_fir_x),
 	.in(fir_in),
 	.loop(data_loop_end),
 	.out(fir_con_x[0])
@@ -351,17 +360,17 @@
 	/*---...and sum multiplexing (with synchronization)---*/
 	localparam DSP_PIPELINE_DIFF = 1; // difference in registers from samples multiplexer
 	// to first summation in fir block (so fresh sample would contribute to fresh 0 sum)
-	wire [COUNT_WIDTH-1:0] sum_count;
+	wire [COUNT_WIDTH-1:0] count_fir_sum;
 	shiftby #(.BY(DSP_PIPELINE_DIFF), .WIDTH(COUNT_WIDTH))
 	shift_sum_count 
-	(.in(count), .out(sum_count), .clk(fir_clk));
+	(.in(count_fir_x), .out(count_fir_sum), .clk(fir_clk));
 
 	loop_multplx #(
 	.COUNT_WIDTH(COUNT_WIDTH),
-	.DATA_WIDTH(SUM_WIDTH)	
+	.DATA_WIDTH(FIR_SUM_WIDTH)	
 	) 
 	inst_sum_multplx (
-	.count(sum_count),
+	.count(count_fir_sum),
 	.in(0),
 	.loop(sum_loop_end),
 	.out(fir_con_sum[0])
@@ -383,9 +392,9 @@
 			firtap #(
 			.XW(FIR_DATA_WIDTH),
 			.COEFW(FIR_COEF_WIDTH),
-			.OUTW(SUM_WIDTH),
+			.OUTW(FIR_SUM_WIDTH),
 			.SAMPLE_SHIFT(1),
-			.SUM_SHIFT(1+FIR_TM)
+			.SUM_SHIFT(1+TM)
 			) inst_tap(
 			.clk(fir_clk),
 			.inX(fir_con_x[k]),
@@ -403,15 +412,15 @@
 		for(genvar l = 0; l < FIR_DSP_NR; l = l+1) begin
 			coef_multplx #(
 			.COEFW(FIR_COEF_WIDTH),
-			.AW(ADDR_BRAM_WIDTH),
-			.TM(FIR_TM),
+			.AW(BRAM_ADDR_WIDTH),
+			.TM(TM),
 			.CW(COUNT_WIDTH)
 			) inst_fir_coef_multplx(
 			.clkw(S_AXI_ACLK),
 			.clkr(fir_clk),
 			.counter_in(fir_con_count[l]),
 			.counter_out(fir_con_count[l+1]),
-			.coef_write(coef_bram_data),
+			.coef_write(fir_coef_bram_data),
 			.coef_write_addr(coef_bram_addr),
 			.coef_write_en(fir_bram_en[l]),
 			.coef_out(fir_coef_crr[l])
@@ -421,20 +430,19 @@
 	/*---------------------------------*/
 
 	/*---Transition to upsampler---*/
-	localparam UPSAMP_DATA_WIDTH = FIR_DATA_WIDTH + UPSAMP_DATA_WIDTH_EXT;
 
 	reg signed [UPSAMP_DATA_WIDTH-1:0] upsamp_in;
 	reg signed [UPSAMP_DATA_WIDTH-1:0] upsamp_in_1;
-	wire [COUNT_WIDTH-1:0] upsamp_count;
+	wire [COUNT_WIDTH-1:0] count_upsamp_coefs;
 	always @(posedge fir_clk) begin
-		if(sum_count == 0)
-			upsamp_in_1[UPSAMP_DATA_WIDTH-1:0] <= sum_loop_end[SUM_WIDTH-1: SUM_WIDTH - UPSAMP_DATA_WIDTH];
+		if(count_fir_sum == 0)
+			upsamp_in_1 <= sum_loop_end[FIR_SUM_WIDTH-1: FIR_SUM_WIDTH - UPSAMP_DATA_WIDTH];
 	end
 	always @(posedge fir_clk) begin
 		upsamp_in <= upsamp_in_1;
 	end
 	//data is shifted 2 times relative to counter
-	assign upsamp_count = sum_count;
+	assign count_upsamp_coefs = count_fir_sum;
 
 	/*--------------------------------*/
 	/*----------UPSAMPLER-------------*/
@@ -442,11 +450,11 @@
 
 	//counter connections wiring
 	wire [COUNT_WIDTH-1:0] upsamp_con_count [UPSAMP_DSP_NR + 1];
-	assign upsamp_con_count[0] = upsamp_count;
+	assign upsamp_con_count[0] = count_upsamp_coefs;
 
 
 	/*---Partial sums and samples wirings---*/
-	localparam UPSAMP_SUM_WIDTH = UPSAMP_DATA_WIDTH + FIR_COEF_MAG; /*at the end, sum is shortened by COEFMAG to XW length,
+	localparam UPSAMP_SUM_WIDTH = UPSAMP_DATA_WIDTH + SRC_COEF_MAG; /*at the end, sum is shortened by COEFMAG to XW length,
 	so there is little reason to add more registers*/
 
 
@@ -463,17 +471,17 @@
 
 	/*---Coefficients' wiring---*/
 
-	wire signed [FIR_COEF_WIDTH-1 : 0] upsamp_coef_crr [UPSAMP_DSP_NR];
+	wire signed [SRC_COEF_WIDTH-1 : 0] upsamp_coef_crr [UPSAMP_DSP_NR];
 
 	/*----------------Fir taps---------------*/
 	generate
 		for(genvar k = 0; k < UPSAMP_DSP_NR; k = k + 1) begin
 			firtap #(
 			.XW(UPSAMP_DATA_WIDTH),
-			.COEFW(FIR_COEF_WIDTH),
+			.COEFW(SRC_COEF_WIDTH),
 			.OUTW(UPSAMP_SUM_WIDTH),
 			.SAMPLE_SHIFT(1),
-			.SUM_SHIFT(1+FIR_TM)
+			.SUM_SHIFT(1+TM)
 			) inst_upsamp_tap(
 			.clk(fir_clk),
 			.inX(upsamp_con_x[k]),
@@ -490,16 +498,16 @@
 	generate
 		for(genvar l = 0; l < UPSAMP_DSP_NR; l = l+1) begin
 			coef_multplx #(
-			.COEFW(FIR_COEF_WIDTH),
-			.AW(ADDR_BRAM_WIDTH),
-			.TM(FIR_TM),
+			.COEFW(SRC_COEF_WIDTH),
+			.AW(BRAM_ADDR_WIDTH),
+			.TM(TM),
 			.CW(COUNT_WIDTH)
 			) inst_upsamp_coef_multplx(
 			.clkw(S_AXI_ACLK),
 			.clkr(fir_clk),
 			.counter_in(upsamp_con_count[l]),
 			.counter_out(upsamp_con_count[l+1]),
-			.coef_write(coef_bram_data),
+			.coef_write(src_coef_bram_data),
 			.coef_write_addr(coef_bram_addr),
 			.coef_write_en(upsamp_bram_en[l]),
 			.coef_out(upsamp_coef_crr[l])
@@ -509,7 +517,7 @@
 
 	/*---Upsampler output---*/
 	wire signed [FIR_DATA_WIDTH-1:0] upsampler_out;
-	assign upsampler_out[FIR_DATA_WIDTH-1:0] = upsamp_con_sum[UPSAMP_DSP_NR][UPSAMP_SUM_WIDTH-1: UPSAMP_SUM_WIDTH - FIR_DATA_WIDTH];
+	assign upsampler_out = upsamp_con_sum[UPSAMP_DSP_NR][UPSAMP_SUM_WIDTH-1: UPSAMP_SUM_WIDTH - OUTPUT_DATA_WIDTH];
 
 
 	/*---Fir switch on/off---*/
@@ -522,15 +530,6 @@
 		endcase
 	end
 	/*-----------------------*/
-
-	/*-----Fir info------*/
-	always @(*) begin
-		fir_coefs_max_nr = FIR_COEFS_NR;
-		upsamp_coefs_nr = UPSAMP_COEFS_NR;
-		info_1 = PROG_NAME;
-		info_2 = PROG_VER; 
-	end
-	/*-------------------*/
 
 
 

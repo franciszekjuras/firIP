@@ -10,14 +10,30 @@ proc init_gui { IPINST } {
   ipgui::add_param $IPINST -name "C_S00_AXI_BASEADDR" -parent ${Page_0}
   ipgui::add_param $IPINST -name "C_S00_AXI_HIGHADDR" -parent ${Page_0}
 
-  ipgui::add_param $IPINST -name "FIR_DATA_WIDTH"
-  ipgui::add_param $IPINST -name "FIR_COEF_WIDTH"
   set FIR_DSP_NR [ipgui::add_param $IPINST -name "FIR_DSP_NR"]
   set_property tooltip {Check in your fpga documentation how many blocks are available} ${FIR_DSP_NR}
+  set TM [ipgui::add_param $IPINST -name "TM" -show_range false]
+  set_property tooltip {Higher time multiplexing rank gives higher kernel ranks and decreases band width.} ${TM}
   set FIR_COEF_MAG [ipgui::add_param $IPINST -name "FIR_COEF_MAG"]
   set_property tooltip {Coefficients should be converted by multiplying by 2^FIR_COEF_MAG} ${FIR_COEF_MAG}
-  ipgui::add_param $IPINST -name "FIR_TM"
+  set SRC_COEF_MAG [ipgui::add_param $IPINST -name "SRC_COEF_MAG"]
+  set_property tooltip {Coefficients should be converted by multiplying by 2^SRC_COEF_MAG} ${SRC_COEF_MAG}
+  set DWSAMP_DSP_NR [ipgui::add_param $IPINST -name "DWSAMP_DSP_NR"]
+  set_property tooltip {Check in your fpga documentation how many blocks are available.} ${DWSAMP_DSP_NR}
+  set UPSAMP_DSP_NR [ipgui::add_param $IPINST -name "UPSAMP_DSP_NR"]
+  set_property tooltip {Check in your fpga documentation how many blocks are available.} ${UPSAMP_DSP_NR}
+  ipgui::add_param $IPINST -name "INPUT_DATA_WIDTH"
+  ipgui::add_param $IPINST -name "OUTPUT_DATA_WIDTH"
 
+}
+
+proc update_PARAM_VALUE.DWSAMP_DSP_NR { PARAM_VALUE.DWSAMP_DSP_NR } {
+	# Procedure called to update DWSAMP_DSP_NR when any of the dependent parameters in the arguments change
+}
+
+proc validate_PARAM_VALUE.DWSAMP_DSP_NR { PARAM_VALUE.DWSAMP_DSP_NR } {
+	# Procedure called to validate DWSAMP_DSP_NR
+	return true
 }
 
 proc update_PARAM_VALUE.FIR_COEF_MAG { PARAM_VALUE.FIR_COEF_MAG } {
@@ -26,24 +42,6 @@ proc update_PARAM_VALUE.FIR_COEF_MAG { PARAM_VALUE.FIR_COEF_MAG } {
 
 proc validate_PARAM_VALUE.FIR_COEF_MAG { PARAM_VALUE.FIR_COEF_MAG } {
 	# Procedure called to validate FIR_COEF_MAG
-	return true
-}
-
-proc update_PARAM_VALUE.FIR_COEF_WIDTH { PARAM_VALUE.FIR_COEF_WIDTH } {
-	# Procedure called to update FIR_COEF_WIDTH when any of the dependent parameters in the arguments change
-}
-
-proc validate_PARAM_VALUE.FIR_COEF_WIDTH { PARAM_VALUE.FIR_COEF_WIDTH } {
-	# Procedure called to validate FIR_COEF_WIDTH
-	return true
-}
-
-proc update_PARAM_VALUE.FIR_DATA_WIDTH { PARAM_VALUE.FIR_DATA_WIDTH } {
-	# Procedure called to update FIR_DATA_WIDTH when any of the dependent parameters in the arguments change
-}
-
-proc validate_PARAM_VALUE.FIR_DATA_WIDTH { PARAM_VALUE.FIR_DATA_WIDTH } {
-	# Procedure called to validate FIR_DATA_WIDTH
 	return true
 }
 
@@ -56,12 +54,48 @@ proc validate_PARAM_VALUE.FIR_DSP_NR { PARAM_VALUE.FIR_DSP_NR } {
 	return true
 }
 
-proc update_PARAM_VALUE.FIR_TM { PARAM_VALUE.FIR_TM } {
-	# Procedure called to update FIR_TM when any of the dependent parameters in the arguments change
+proc update_PARAM_VALUE.INPUT_DATA_WIDTH { PARAM_VALUE.INPUT_DATA_WIDTH } {
+	# Procedure called to update INPUT_DATA_WIDTH when any of the dependent parameters in the arguments change
 }
 
-proc validate_PARAM_VALUE.FIR_TM { PARAM_VALUE.FIR_TM } {
-	# Procedure called to validate FIR_TM
+proc validate_PARAM_VALUE.INPUT_DATA_WIDTH { PARAM_VALUE.INPUT_DATA_WIDTH } {
+	# Procedure called to validate INPUT_DATA_WIDTH
+	return true
+}
+
+proc update_PARAM_VALUE.OUTPUT_DATA_WIDTH { PARAM_VALUE.OUTPUT_DATA_WIDTH } {
+	# Procedure called to update OUTPUT_DATA_WIDTH when any of the dependent parameters in the arguments change
+}
+
+proc validate_PARAM_VALUE.OUTPUT_DATA_WIDTH { PARAM_VALUE.OUTPUT_DATA_WIDTH } {
+	# Procedure called to validate OUTPUT_DATA_WIDTH
+	return true
+}
+
+proc update_PARAM_VALUE.SRC_COEF_MAG { PARAM_VALUE.SRC_COEF_MAG } {
+	# Procedure called to update SRC_COEF_MAG when any of the dependent parameters in the arguments change
+}
+
+proc validate_PARAM_VALUE.SRC_COEF_MAG { PARAM_VALUE.SRC_COEF_MAG } {
+	# Procedure called to validate SRC_COEF_MAG
+	return true
+}
+
+proc update_PARAM_VALUE.TM { PARAM_VALUE.TM } {
+	# Procedure called to update TM when any of the dependent parameters in the arguments change
+}
+
+proc validate_PARAM_VALUE.TM { PARAM_VALUE.TM } {
+	# Procedure called to validate TM
+	return true
+}
+
+proc update_PARAM_VALUE.UPSAMP_DSP_NR { PARAM_VALUE.UPSAMP_DSP_NR } {
+	# Procedure called to update UPSAMP_DSP_NR when any of the dependent parameters in the arguments change
+}
+
+proc validate_PARAM_VALUE.UPSAMP_DSP_NR { PARAM_VALUE.UPSAMP_DSP_NR } {
+	# Procedure called to validate UPSAMP_DSP_NR
 	return true
 }
 
@@ -112,16 +146,6 @@ proc update_MODELPARAM_VALUE.C_S00_AXI_ADDR_WIDTH { MODELPARAM_VALUE.C_S00_AXI_A
 	set_property value [get_property value ${PARAM_VALUE.C_S00_AXI_ADDR_WIDTH}] ${MODELPARAM_VALUE.C_S00_AXI_ADDR_WIDTH}
 }
 
-proc update_MODELPARAM_VALUE.FIR_DATA_WIDTH { MODELPARAM_VALUE.FIR_DATA_WIDTH PARAM_VALUE.FIR_DATA_WIDTH } {
-	# Procedure called to set VHDL generic/Verilog parameter value(s) based on TCL parameter value
-	set_property value [get_property value ${PARAM_VALUE.FIR_DATA_WIDTH}] ${MODELPARAM_VALUE.FIR_DATA_WIDTH}
-}
-
-proc update_MODELPARAM_VALUE.FIR_COEF_WIDTH { MODELPARAM_VALUE.FIR_COEF_WIDTH PARAM_VALUE.FIR_COEF_WIDTH } {
-	# Procedure called to set VHDL generic/Verilog parameter value(s) based on TCL parameter value
-	set_property value [get_property value ${PARAM_VALUE.FIR_COEF_WIDTH}] ${MODELPARAM_VALUE.FIR_COEF_WIDTH}
-}
-
 proc update_MODELPARAM_VALUE.FIR_DSP_NR { MODELPARAM_VALUE.FIR_DSP_NR PARAM_VALUE.FIR_DSP_NR } {
 	# Procedure called to set VHDL generic/Verilog parameter value(s) based on TCL parameter value
 	set_property value [get_property value ${PARAM_VALUE.FIR_DSP_NR}] ${MODELPARAM_VALUE.FIR_DSP_NR}
@@ -132,8 +156,33 @@ proc update_MODELPARAM_VALUE.FIR_COEF_MAG { MODELPARAM_VALUE.FIR_COEF_MAG PARAM_
 	set_property value [get_property value ${PARAM_VALUE.FIR_COEF_MAG}] ${MODELPARAM_VALUE.FIR_COEF_MAG}
 }
 
-proc update_MODELPARAM_VALUE.FIR_TM { MODELPARAM_VALUE.FIR_TM PARAM_VALUE.FIR_TM } {
+proc update_MODELPARAM_VALUE.TM { MODELPARAM_VALUE.TM PARAM_VALUE.TM } {
 	# Procedure called to set VHDL generic/Verilog parameter value(s) based on TCL parameter value
-	set_property value [get_property value ${PARAM_VALUE.FIR_TM}] ${MODELPARAM_VALUE.FIR_TM}
+	set_property value [get_property value ${PARAM_VALUE.TM}] ${MODELPARAM_VALUE.TM}
+}
+
+proc update_MODELPARAM_VALUE.INPUT_DATA_WIDTH { MODELPARAM_VALUE.INPUT_DATA_WIDTH PARAM_VALUE.INPUT_DATA_WIDTH } {
+	# Procedure called to set VHDL generic/Verilog parameter value(s) based on TCL parameter value
+	set_property value [get_property value ${PARAM_VALUE.INPUT_DATA_WIDTH}] ${MODELPARAM_VALUE.INPUT_DATA_WIDTH}
+}
+
+proc update_MODELPARAM_VALUE.OUTPUT_DATA_WIDTH { MODELPARAM_VALUE.OUTPUT_DATA_WIDTH PARAM_VALUE.OUTPUT_DATA_WIDTH } {
+	# Procedure called to set VHDL generic/Verilog parameter value(s) based on TCL parameter value
+	set_property value [get_property value ${PARAM_VALUE.OUTPUT_DATA_WIDTH}] ${MODELPARAM_VALUE.OUTPUT_DATA_WIDTH}
+}
+
+proc update_MODELPARAM_VALUE.SRC_COEF_MAG { MODELPARAM_VALUE.SRC_COEF_MAG PARAM_VALUE.SRC_COEF_MAG } {
+	# Procedure called to set VHDL generic/Verilog parameter value(s) based on TCL parameter value
+	set_property value [get_property value ${PARAM_VALUE.SRC_COEF_MAG}] ${MODELPARAM_VALUE.SRC_COEF_MAG}
+}
+
+proc update_MODELPARAM_VALUE.DWSAMP_DSP_NR { MODELPARAM_VALUE.DWSAMP_DSP_NR PARAM_VALUE.DWSAMP_DSP_NR } {
+	# Procedure called to set VHDL generic/Verilog parameter value(s) based on TCL parameter value
+	set_property value [get_property value ${PARAM_VALUE.DWSAMP_DSP_NR}] ${MODELPARAM_VALUE.DWSAMP_DSP_NR}
+}
+
+proc update_MODELPARAM_VALUE.UPSAMP_DSP_NR { MODELPARAM_VALUE.UPSAMP_DSP_NR PARAM_VALUE.UPSAMP_DSP_NR } {
+	# Procedure called to set VHDL generic/Verilog parameter value(s) based on TCL parameter value
+	set_property value [get_property value ${PARAM_VALUE.UPSAMP_DSP_NR}] ${MODELPARAM_VALUE.UPSAMP_DSP_NR}
 }
 

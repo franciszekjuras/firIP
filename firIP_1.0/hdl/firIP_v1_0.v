@@ -4,11 +4,14 @@
 	module firIP_v1_0 #
 	(
 		// Users to add parameters here
-        parameter FIR_DATA_WIDTH = 14,
-        parameter FIR_COEF_WIDTH = 18,
-		parameter FIR_COEF_MAG = 0,
-        parameter FIR_DSP_NR = 4,
-        parameter FIR_TM = 2,
+        parameter FIR_DSP_NR = 70,
+        parameter TM = 66,
+        parameter INPUT_DATA_WIDTH = 14,
+        parameter OUTPUT_DATA_WIDTH = 14,
+		parameter FIR_COEF_MAG = 20,
+		parameter SRC_COEF_MAG = 17,
+		parameter DWSAMP_DSP_NR = 10,
+		parameter UPSAMP_DSP_NR = 10,
 		// User parameters ends
 		// Do not modify the parameters beyond this line
 
@@ -20,13 +23,12 @@
 	(
 		// Users to add ports here
         input wire fir_clk,
-        input wire [FIR_DATA_WIDTH-1 : 0] fir_in,
-        output wire [FIR_DATA_WIDTH-1 : 0] fir_out,
+        input wire [INPUT_DATA_WIDTH-1 : 0] fir_in,
+        output wire [OUTPUT_DATA_WIDTH-1 : 0] fir_out,
         output wire [7:0] leds_out,
 
 		// User ports ends
 		// Do not modify the ports beyond this line
-
 
 		// Ports of Axi Slave Bus Interface S00_AXI
 		input wire  s00_axi_aclk,
@@ -53,11 +55,16 @@
 	);
 // Instantiation of Axi Bus Interface S00_AXI
 	firMainAXI # ( 
-        .FIR_DATA_WIDTH(FIR_DATA_WIDTH),
-        .FIR_COEF_WIDTH(FIR_COEF_WIDTH),
-        .FIR_COEF_MAG(FIR_COEF_MAG),
         .FIR_DSP_NR(FIR_DSP_NR),
-        .FIR_TM(FIR_TM),
+        .TM(TM),
+        .INPUT_DATA_WIDTH(INPUT_DATA_WIDTH),
+        .OUTPUT_DATA_WIDTH(OUTPUT_DATA_WIDTH),
+        .FIR_COEF_WIDTH(FIR_COEF_MAG+1),
+        .FIR_COEF_MAG(FIR_COEF_MAG),
+        .SRC_COEF_WIDTH(SRC_COEF_MAG+1),
+        .SRC_COEF_MAG(SRC_COEF_MAG),
+        .DWSAMP_DSP_NR(DWSAMP_DSP_NR),
+        .UPSAMP_DSP_NR(UPSAMP_DSP_NR),
 		.C_S_AXI_DATA_WIDTH(C_S00_AXI_DATA_WIDTH),
 		.C_S_AXI_ADDR_WIDTH(C_S00_AXI_ADDR_WIDTH)
 	) firMainAXI_inst (
