@@ -67,6 +67,8 @@
 	localparam DWSAMP_COEFS_NR = TM * DWSAMP_DSP_NR;
 
 	localparam ADDR_LSB = (C_S_AXI_DATA_WIDTH/32) + 1;
+	localparam AXI_AW = C_S_AXI_ADDR_WIDTH - ADDR_LSB;
+
 	localparam BRAM_ADDR_WIDTH = 7;
 	localparam DSP_ADDR_WIDTH = C_S_AXI_ADDR_WIDTH - BRAM_ADDR_WIDTH - ADDR_LSB; //7
 	// Addresses' bases in 32/64 bit addressing
@@ -75,13 +77,18 @@
 	localparam DWSAMP_COEFS_BASE = 101;
 	localparam FIR_DEBUG_OFFSET = 32;
 	//reverse order xD
-	localparam PROG_NAME = "_RIF";
+	localparam PROG_NAME = " RIF";
 	localparam PROG_VER = "0.2";
 
 	//Switches:
 	localparam SWITCH_CON_EST = 0;
 	localparam SWITCH_FIR_EN = 1;
 	localparam SWITCH_FIR_SNAP = 5;
+
+
+	localparam DAW = 11;
+	localparam DB = 59;
+	localparam DCW = $clog2(DB)+DAW;
 
 	integer idx;
 
@@ -131,10 +138,14 @@
 	assign addr_bram = axi_awaddr[BRAM_ADDR_WIDTH-1:0];
 	assign addr_dsp = axi_awaddr[BRAM_ADDR_WIDTH+DSP_ADDR_WIDTH-1:BRAM_ADDR_WIDTH];
 
+	wire [DAW-1:0] d_bram_addr;
+	assign d_bram_addr = axi_araddr[DAW-1:0];
+
 	// Registers connected to AXI
 
 /*20*/    reg [C_S_AXI_DATA_WIDTH-1 : 0] switches;
 /*21*/    reg [C_S_AXI_DATA_WIDTH-1 : 0] fir_coefs_crr_nr;
+/*21*/    reg [C_S_AXI_DATA_WIDTH-1 : 0] crr_debug_block;
 
 	/*Dozen of boring AXI4-lite procedures*/
 	always @( posedge S_AXI_ACLK ) begin
@@ -195,6 +206,7 @@
 			case(axi_awaddr)
 				20: switches <= S_AXI_WDATA;
 				21: fir_coefs_crr_nr <= S_AXI_WDATA;
+				22: crr_debug_block <= S_AXI_WDATA;
 			endcase
 		end else begin
 			for(idx = 0; idx < FIR_DSP_NR; idx = idx + 1) begin
@@ -257,31 +269,36 @@
 	always @(*)
 	begin
 		// Address decoding for reading registers
-		case ( axi_araddr )
-		0 : reg_data_out = PROG_NAME;
-		1 : reg_data_out = PROG_VER;
+		if(axi_araddr[AXI_AW-1:DAW]==1) begin
+			reg_data_out = d_readout;
+		end else begin
+			case ( axi_araddr )
+			0 : reg_data_out = PROG_NAME;
+			1 : reg_data_out = PROG_VER;
 
-		4 : reg_data_out = FIR_COEFS_NR;
-		5 : reg_data_out = UPSAMP_COEFS_NR;
-		6 : reg_data_out = DWSAMP_COEFS_NR;
+			4 : reg_data_out = FIR_COEFS_NR;
+			5 : reg_data_out = UPSAMP_COEFS_NR;
+			6 : reg_data_out = DWSAMP_COEFS_NR;
 
-		8 : reg_data_out = TM;
-		9 : reg_data_out = FIR_DSP_NR;
-		10: reg_data_out = UPSAMP_DSP_NR;
-		11: reg_data_out = DWSAMP_DSP_NR;
+			8 : reg_data_out = TM;
+			9 : reg_data_out = FIR_DSP_NR;
+			10: reg_data_out = UPSAMP_DSP_NR;
+			11: reg_data_out = DWSAMP_DSP_NR;
 
-		12: reg_data_out = FIR_COEF_MAG;
-		13: reg_data_out = SRC_COEF_MAG;
+			12: reg_data_out = FIR_COEF_MAG;
+			13: reg_data_out = SRC_COEF_MAG;
 
-		16: reg_data_out = FIR_COEFS_BASE;
-		17: reg_data_out = UPSAMP_COEFS_BASE;
-		18: reg_data_out = DWSAMP_COEFS_BASE;
+			16: reg_data_out = FIR_COEFS_BASE;
+			17: reg_data_out = UPSAMP_COEFS_BASE;
+			18: reg_data_out = DWSAMP_COEFS_BASE;
 
-		20 : reg_data_out = switches;
-		21 : reg_data_out = fir_coefs_crr_nr;
+			20 : reg_data_out = switches;
+			21 : reg_data_out = fir_coefs_crr_nr;
+			22 : reg_data_out = crr_debug_block;
 
-		default : reg_data_out = 0;
-		endcase
+			default : reg_data_out = 0;
+			endcase
+		end
 		// for(idx = 0; idx < (DEBUG_LENGTH*DEBUG_DEPTH); idx = idx + 1) begin
 		// 	if(idx + FIR_OFFSET_DEBUG == axi_araddr) begin
 		// 		reg_data_out = debug_block[idx]; //WARN:sign bit might not be shifted properly
@@ -302,7 +319,7 @@
 	//-----------------------------------------------------//
 
 	//LEDS
-	assign leds_out[7:0] = switches[7:0];
+	assign leds_out[6:0] = switches[6:0];
 
 	//COUNTER
 	localparam COUNT_WIDTH = $clog2(TM);
@@ -530,6 +547,104 @@
 		endcase
 	end
 	/*-----------------------*/
+
+
+	reg [DCW-1:0] d_count;
+	localparam IDLE = 1'b0, RUN = 1'b1;
+	reg dstate;
+	wire start_count;
+	reg d_enablea[DB];
+	reg d_enableb;
+	wire d_enable[DB];
+	wire signed [INPUT_DATA_WIDTH-1:0] d_out[DB];
+	reg signed [INPUT_DATA_WIDTH-1:0] d_readout;
+
+	assign leds_out[7] = dstate;
+
+	reg fir_snap; 
+	xpm_cdc_single fir_snap_cdc (
+		.src_clk(S_AXI_ACLK),
+		.src_in(switches[SWITCH_FIR_SNAP]),
+		.dest_clk(fir_clk),
+		.dest_out(fir_snap)
+	);
+	reg fir_snap2;
+	always @(posedge fir_clk) begin
+		fir_snap2 <= fir_snap;
+	end
+	assign start_count = fir_snap & (~fir_snap2);
+
+
+	localparam MAX_SAMP_ADDR = DB*(1<<DAW);
+	always @(posedge fir_clk) begin
+		case(dstate)
+			IDLE: if(start_count) begin
+				dstate <= RUN;
+				d_enableb <= 1'b1;
+			end
+			RUN: if(d_count == MAX_SAMP_ADDR-1) begin
+				dstate <= IDLE;
+				d_enableb <= 1'b0;
+				d_count<=0;
+			end else begin
+				d_count <= d_count + 1;
+			end
+		endcase // dstate
+	end
+	
+	always @(*) begin
+		for(int j = 0; j < DB; j = j+1) begin
+			if(d_count[DCW-1:DAW]==j)
+				d_enablea[j] = 1'b1;
+			else
+				d_enablea[j] = 1'b0;
+		end
+	end
+
+	generate
+		for(genvar g = 0; g < DB; g = g+1)
+			assign d_enable[g] = d_enablea[g] & d_enableb;
+	endgenerate
+
+	reg [DAW-1:0] d_wraddr;
+	always @(posedge fir_clk)
+		d_wraddr <= d_count[DAW-1:0];
+
+	generate
+	for(genvar g = 0; g < DB; g = g+1) begin
+		BRAM_SDP_MACRO #(
+		.BRAM_SIZE("36Kb"), 
+		.DEVICE("7SERIES"),
+		.WRITE_WIDTH(INPUT_DATA_WIDTH),
+		.READ_WIDTH(INPUT_DATA_WIDTH),
+		// Valid values are 1-72 (37-72 only valid when BRAM_SIZE="36Kb")
+		.DO_REG(0),
+		.INIT_FILE ("NONE"),
+		.SIM_COLLISION_CHECK ("ALL"),
+		.WRITE_MODE("WRITE_FIRST")
+		) samples_bram_inst (
+		.DO(d_out[g]),
+		.DI(fir_in),
+		.RDADDR(d_bram_addr), // Input read address, width defined by read port depth
+		.RDCLK(S_AXI_ACLK),
+		.RDEN(1'b1),
+		.REGCE(1'b0),
+		.RST(1'b0),
+		.WE(4'b1111),
+		.WRADDR(d_wraddr),
+		.WRCLK(fir_clk),
+		.WREN(d_enable[g])
+		);
+	end
+	endgenerate
+
+	always @(*) begin
+		d_readout = 0;
+		for(int j = 0; j < DB; j = j+1) begin
+			if(crr_debug_block == j)
+				d_readout = d_out[j];
+		end
+	end
 
 
 
