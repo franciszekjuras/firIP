@@ -75,8 +75,8 @@
 	localparam DWSAMP_COEFS_BASE = 101;
 	localparam FIR_DEBUG_OFFSET = 32;
 	//reverse order xD
-	localparam PROG_NAME = "_RIF";
-	localparam PROG_VER = "0.2";
+	localparam PROG_NAME = " RIF";
+	localparam PROG_VER = "1.2";
 
 	//Switches:
 	localparam SWITCH_CON_EST = 0;
