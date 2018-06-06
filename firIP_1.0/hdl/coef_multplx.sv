@@ -1,7 +1,7 @@
 `timescale 1ns / 1ps
 
 module coef_multplx
-	#(parameter COEFW = 18, AW = 7, TM = 2, CW = 1)
+	#(parameter COEFW = 18, AW = 7, TM = 2, CW = 1, COUNT_SHIFT = 2)
 	(
 	input wire clkw,
 	input wire clkr,
@@ -41,6 +41,8 @@ module coef_multplx
 	.WREN(coef_write_en)
 	);
 
-	always @(posedge clkr)
-		counter_out <= counter_in;
+	shiftby #(.BY(COUNT_SHIFT), .WIDTH(CW))
+	shift_sum_count 
+	(.in(counter_in), .out(counter_out), .clk(clkr));
+
 endmodule
