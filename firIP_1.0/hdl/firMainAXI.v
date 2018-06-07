@@ -77,7 +77,7 @@
 	//reverse order xD
 	localparam PROG_NAME = " RIF";
 	localparam PROG_VER = " 0.3";
-	localparam PROG_STAT = "STBL";
+	localparam PROG_STAT = "LBTS";
 
 	//Switches:
 	localparam SWITCH_CON_EST = 0;
