@@ -24,8 +24,8 @@
 	(
 		// Users to add ports here
 		input wire fir_clk,
-		input wire signed [FIR_DATA_WIDTH-1 : 0] fir_in,
-		output reg signed [FIR_DATA_WIDTH-1 : 0] fir_out,
+		input wire signed [INPUT_DATA_WIDTH-1 : 0] fir_in,
+		output reg signed [OUTPUT_DATA_WIDTH-1 : 0] fir_out,
 		output wire [7:0] leds_out,
 		// User ports ends
 		
@@ -76,8 +76,8 @@
 	localparam FIR_DEBUG_OFFSET = 32;
 	//reverse order xD
 	localparam PROG_NAME = " RIF";
-	localparam PROG_VER = " 0.3";
-	localparam PROG_STAT = "LBTS";
+	localparam PROG_VER = "10.3";
+	localparam PROG_STAT = "VED ";
 
 	//Switches:
 	localparam SWITCH_CON_EST = 0;
@@ -521,7 +521,7 @@
 	endgenerate
 
 	/*---Upsampler output---*/
-	wire signed [FIR_DATA_WIDTH-1:0] upsampler_out;
+	wire signed [OUTPUT_DATA_WIDTH-1:0] upsampler_out;
 	assign upsampler_out = upsamp_con_sum[UPSAMP_DSP_NR][UPSAMP_SUM_WIDTH-1: UPSAMP_SUM_WIDTH - OUTPUT_DATA_WIDTH];
 
 
