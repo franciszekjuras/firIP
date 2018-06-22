@@ -76,7 +76,7 @@
 	localparam FIR_DEBUG_OFFSET = 32;
 	//reverse order xD
 	localparam PROG_NAME = " RIF";
-	localparam PROG_VER = "10.3";
+	localparam PROG_VER = "01.3";
 	localparam PROG_STAT = "VED ";
 
 	//Switches:
