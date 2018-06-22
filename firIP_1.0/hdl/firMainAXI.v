@@ -24,8 +24,8 @@
 	(
 		// Users to add ports here
 		input wire fir_clk,
-		input wire signed [FIR_DATA_WIDTH-1 : 0] fir_in,
-		output reg signed [FIR_DATA_WIDTH-1 : 0] fir_out,
+		input wire signed [INPUT_DATA_WIDTH-1 : 0] fir_in,
+		output reg signed [OUTPUT_DATA_WIDTH-1 : 0] fir_out,
 		output wire [7:0] leds_out,
 		// User ports ends
 		
@@ -79,7 +79,7 @@
 	//reverse order xD
 	localparam PROG_NAME = " RIF";
 	localparam PROG_VER = " 0.3";
-	localparam PROG_STAT = "LBTS";
+	localparam PROG_STAT = "GUBD";
 
 	//Switches:
 	localparam SWITCH_CON_EST = 0;
@@ -88,7 +88,7 @@
 
 
 	localparam DAW = 11;
-	localparam DB = 59;
+	localparam DB = 20; //number of brams sample collection uses
 	localparam DCW = $clog2(DB)+DAW;
 
 	integer idx;
@@ -147,6 +147,7 @@
 /*20*/    reg [C_S_AXI_DATA_WIDTH-1 : 0] switches;
 /*21*/    reg [C_S_AXI_DATA_WIDTH-1 : 0] fir_coefs_crr_nr;
 /*21*/    reg [C_S_AXI_DATA_WIDTH-1 : 0] crr_debug_block;
+/*22*/    reg [C_S_AXI_DATA_WIDTH-1 : 0] debug_source;
 
 	/*Dozen of boring AXI4-lite procedures*/
 	always @( posedge S_AXI_ACLK ) begin
@@ -208,6 +209,7 @@
 				20: switches <= S_AXI_WDATA;
 				21: fir_coefs_crr_nr <= S_AXI_WDATA;
 				22: crr_debug_block <= S_AXI_WDATA;
+				23: debug_source <= S_AXI_WDATA;
 			endcase
 		end else begin
 			for(idx = 0; idx < FIR_DSP_NR; idx = idx + 1) begin
@@ -296,6 +298,7 @@
 			20 : reg_data_out = switches;
 			21 : reg_data_out = fir_coefs_crr_nr;
 			22 : reg_data_out = crr_debug_block;
+			23 : reg_data_out = debug_source;
 
 			default : reg_data_out = 0;
 			endcase
@@ -614,6 +617,16 @@
 	always @(posedge fir_clk)
 		d_wraddr <= d_count[DAW-1:0];
 
+	reg [INPUT_DATA_WIDTH-1:0]sample_in;
+	always @(posedge fir_clk) begin
+		case(debug_source[2:0])
+			3'b000: sample_in <= upsamp_in;
+			3'b001: sample_in <= upsampler_out;
+			default: sample_in <= 0;
+		endcase
+	end
+
+
 	generate
 	for(genvar g = 0; g < DB; g = g+1) begin
 		BRAM_SDP_MACRO #(
@@ -628,7 +641,7 @@
 		.WRITE_MODE("WRITE_FIRST")
 		) samples_bram_inst (
 		.DO(d_out[g]),
-		.DI(fir_in),
+		.DI(sample_in),
 		.RDADDR(d_bram_addr), // Input read address, width defined by read port depth
 		.RDCLK(S_AXI_ACLK),
 		.RDEN(1'b1),
