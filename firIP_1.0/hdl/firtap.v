@@ -16,10 +16,7 @@ module firtap
 
     shiftby #(.BY(SAMPLE_SHIFT),.WIDTH(XW)) shiftX (.in(inX), .out(outX), .clk(clk));
     shiftby #(.BY(SUM_SHIFT - SUM_LATENCY),.WIDTH(OUTW)) shiftS (.in(sum), .out(outSum), .clk(clk));
-    // always @(posedge clk) begin
-    //     outX <= inX;
-    // end
-    
+
     MACC_MACRO #(
     .DEVICE("7SERIES"),
     .LATENCY(3),

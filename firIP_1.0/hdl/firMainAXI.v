@@ -78,7 +78,8 @@
 	localparam FIR_DEBUG_OFFSET = 32;
 	//reverse order xD
 	localparam PROG_NAME = " RIF";
-	localparam PROG_VER = "0.2";
+	localparam PROG_VER = " 0.3";
+	localparam PROG_STAT = "LBTS";
 
 	//Switches:
 	localparam SWITCH_CON_EST = 0;
@@ -334,9 +335,10 @@
 	.count(count_fir_coefs));
 
 	//counter connections wiring
+	localparam COEF_MULTPLX_LATENCY = 2;
 	wire [COUNT_WIDTH-1:0] fir_con_count [FIR_DSP_NR + 1];
 	assign fir_con_count[0] = count_fir_coefs;
-	shiftby #(.BY(2), .WIDTH(COUNT_WIDTH)) shift_count_origin
+	shiftby #(.BY(COEF_MULTPLX_LATENCY), .WIDTH(COUNT_WIDTH)) shift_count_origin
 	(.in(count_fir_coefs), .out(count_fir_x), .clk(fir_clk));
 
 
@@ -352,7 +354,7 @@
 	/*---------------------------------------*/
 
 	/*---Loop shift (synchronization)... and multiplexing---*/
-	localparam LOOP_FEEDBACK_SYNC = TM + 1 - (FIR_DSP_NR%TM);
+	localparam LOOP_FEEDBACK_SYNC = TM + 1 - ((2*FIR_DSP_NR)%TM);
 
 	shiftby #(.BY(LOOP_FEEDBACK_SYNC), .WIDTH(FIR_DATA_WIDTH))
 	shift_data_loop
@@ -410,8 +412,8 @@
 			.XW(FIR_DATA_WIDTH),
 			.COEFW(FIR_COEF_WIDTH),
 			.OUTW(FIR_SUM_WIDTH),
-			.SAMPLE_SHIFT(1),
-			.SUM_SHIFT(1+TM)
+			.SAMPLE_SHIFT(2+TM),
+			.SUM_SHIFT(2)
 			) inst_tap(
 			.clk(fir_clk),
 			.inX(fir_con_x[k]),
@@ -431,7 +433,8 @@
 			.COEFW(FIR_COEF_WIDTH),
 			.AW(BRAM_ADDR_WIDTH),
 			.TM(TM),
-			.CW(COUNT_WIDTH)
+			.CW(COUNT_WIDTH),
+			.COUNT_SHIFT(2) //should be equal to min(SAMPLE_SHIFT, SUM_SHIFT)
 			) inst_fir_coef_multplx(
 			.clkw(S_AXI_ACLK),
 			.clkr(fir_clk),
@@ -497,8 +500,8 @@
 			.XW(UPSAMP_DATA_WIDTH),
 			.COEFW(SRC_COEF_WIDTH),
 			.OUTW(UPSAMP_SUM_WIDTH),
-			.SAMPLE_SHIFT(1),
-			.SUM_SHIFT(1+TM)
+			.SAMPLE_SHIFT(2+TM),
+			.SUM_SHIFT(2)
 			) inst_upsamp_tap(
 			.clk(fir_clk),
 			.inX(upsamp_con_x[k]),
@@ -518,7 +521,8 @@
 			.COEFW(SRC_COEF_WIDTH),
 			.AW(BRAM_ADDR_WIDTH),
 			.TM(TM),
-			.CW(COUNT_WIDTH)
+			.CW(COUNT_WIDTH),
+			.COUNT_SHIFT(2) //should be equal to min(SAMPLE_SHIFT, SUM_SHIFT)
 			) inst_upsamp_coef_multplx(
 			.clkw(S_AXI_ACLK),
 			.clkr(fir_clk),
