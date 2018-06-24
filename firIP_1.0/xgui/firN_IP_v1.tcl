@@ -18,22 +18,11 @@ proc init_gui { IPINST } {
   set_property tooltip {Coefficients should be converted by multiplying by 2^FIR_COEF_MAG} ${FIR_COEF_MAG}
   set SRC_COEF_MAG [ipgui::add_param $IPINST -name "SRC_COEF_MAG"]
   set_property tooltip {Coefficients should be converted by multiplying by 2^SRC_COEF_MAG} ${SRC_COEF_MAG}
-  set DWSAMP_DSP_NR [ipgui::add_param $IPINST -name "DWSAMP_DSP_NR"]
-  set_property tooltip {Check in your fpga documentation how many blocks are available.} ${DWSAMP_DSP_NR}
-  set UPSAMP_DSP_NR [ipgui::add_param $IPINST -name "UPSAMP_DSP_NR"]
-  set_property tooltip {Check in your fpga documentation how many blocks are available.} ${UPSAMP_DSP_NR}
   ipgui::add_param $IPINST -name "INPUT_DATA_WIDTH"
   ipgui::add_param $IPINST -name "OUTPUT_DATA_WIDTH"
+  set SRC_DSP_NR [ipgui::add_param $IPINST -name "SRC_DSP_NR"]
+  set_property tooltip {total DSP used for SRC = SRC_DSP_NR x 2 + 1} ${SRC_DSP_NR}
 
-}
-
-proc update_PARAM_VALUE.DWSAMP_DSP_NR { PARAM_VALUE.DWSAMP_DSP_NR } {
-	# Procedure called to update DWSAMP_DSP_NR when any of the dependent parameters in the arguments change
-}
-
-proc validate_PARAM_VALUE.DWSAMP_DSP_NR { PARAM_VALUE.DWSAMP_DSP_NR } {
-	# Procedure called to validate DWSAMP_DSP_NR
-	return true
 }
 
 proc update_PARAM_VALUE.FIR_COEF_MAG { PARAM_VALUE.FIR_COEF_MAG } {
@@ -81,21 +70,21 @@ proc validate_PARAM_VALUE.SRC_COEF_MAG { PARAM_VALUE.SRC_COEF_MAG } {
 	return true
 }
 
+proc update_PARAM_VALUE.SRC_DSP_NR { PARAM_VALUE.SRC_DSP_NR } {
+	# Procedure called to update SRC_DSP_NR when any of the dependent parameters in the arguments change
+}
+
+proc validate_PARAM_VALUE.SRC_DSP_NR { PARAM_VALUE.SRC_DSP_NR } {
+	# Procedure called to validate SRC_DSP_NR
+	return true
+}
+
 proc update_PARAM_VALUE.TM { PARAM_VALUE.TM } {
 	# Procedure called to update TM when any of the dependent parameters in the arguments change
 }
 
 proc validate_PARAM_VALUE.TM { PARAM_VALUE.TM } {
 	# Procedure called to validate TM
-	return true
-}
-
-proc update_PARAM_VALUE.UPSAMP_DSP_NR { PARAM_VALUE.UPSAMP_DSP_NR } {
-	# Procedure called to update UPSAMP_DSP_NR when any of the dependent parameters in the arguments change
-}
-
-proc validate_PARAM_VALUE.UPSAMP_DSP_NR { PARAM_VALUE.UPSAMP_DSP_NR } {
-	# Procedure called to validate UPSAMP_DSP_NR
 	return true
 }
 
@@ -176,13 +165,8 @@ proc update_MODELPARAM_VALUE.SRC_COEF_MAG { MODELPARAM_VALUE.SRC_COEF_MAG PARAM_
 	set_property value [get_property value ${PARAM_VALUE.SRC_COEF_MAG}] ${MODELPARAM_VALUE.SRC_COEF_MAG}
 }
 
-proc update_MODELPARAM_VALUE.DWSAMP_DSP_NR { MODELPARAM_VALUE.DWSAMP_DSP_NR PARAM_VALUE.DWSAMP_DSP_NR } {
+proc update_MODELPARAM_VALUE.SRC_DSP_NR { MODELPARAM_VALUE.SRC_DSP_NR PARAM_VALUE.SRC_DSP_NR } {
 	# Procedure called to set VHDL generic/Verilog parameter value(s) based on TCL parameter value
-	set_property value [get_property value ${PARAM_VALUE.DWSAMP_DSP_NR}] ${MODELPARAM_VALUE.DWSAMP_DSP_NR}
-}
-
-proc update_MODELPARAM_VALUE.UPSAMP_DSP_NR { MODELPARAM_VALUE.UPSAMP_DSP_NR PARAM_VALUE.UPSAMP_DSP_NR } {
-	# Procedure called to set VHDL generic/Verilog parameter value(s) based on TCL parameter value
-	set_property value [get_property value ${PARAM_VALUE.UPSAMP_DSP_NR}] ${MODELPARAM_VALUE.UPSAMP_DSP_NR}
+	set_property value [get_property value ${PARAM_VALUE.SRC_DSP_NR}] ${MODELPARAM_VALUE.SRC_DSP_NR}
 }
 

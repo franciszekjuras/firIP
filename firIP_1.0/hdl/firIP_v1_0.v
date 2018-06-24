@@ -10,8 +10,7 @@
         parameter OUTPUT_DATA_WIDTH = 14,
 		parameter FIR_COEF_MAG = 20,
 		parameter SRC_COEF_MAG = 17,
-		parameter DWSAMP_DSP_NR = 10,
-		parameter UPSAMP_DSP_NR = 10,
+		parameter SRC_DSP_NR = 10,
 		// User parameters ends
 		// Do not modify the parameters beyond this line
 
@@ -63,15 +62,14 @@
         .FIR_COEF_MAG(FIR_COEF_MAG),
         .SRC_COEF_WIDTH(SRC_COEF_MAG+1),
         .SRC_COEF_MAG(SRC_COEF_MAG),
-        .DWSAMP_DSP_NR(DWSAMP_DSP_NR),
-        .UPSAMP_DSP_NR(UPSAMP_DSP_NR),
+        .SRC_DSP_NR(SRC_DSP_NR),
 		.C_S_AXI_DATA_WIDTH(C_S00_AXI_DATA_WIDTH),
 		.C_S_AXI_ADDR_WIDTH(C_S00_AXI_ADDR_WIDTH)
 	) firMainAXI_inst (
-        .fir_clk(fir_clk),
-        .fir_in(fir_in),
-        .fir_out(fir_out),
-        .leds_out(leds_out),
+        .flt_clk(fir_clk),
+        .flt_in(fir_in),
+        .flt_out(fir_out),
+        .axi_leds(leds_out),
 		.S_AXI_ACLK(s00_axi_aclk),
 		.S_AXI_ARESETN(s00_axi_aresetn),
 		.S_AXI_AWADDR(s00_axi_awaddr),
