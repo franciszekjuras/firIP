@@ -271,7 +271,7 @@
 
 		4 : reg_data_out = FIR_COEFS_NR;
 		5 : reg_data_out = SRC_COEFS_NR;
-		6 : reg_data_out = DWSAMP_COEFS_NR;
+		6 : reg_data_out = SRC_COEFS_NR;
 
 		8 : reg_data_out = TM;
 		9 : reg_data_out = FIR_DSP_NR;
@@ -327,7 +327,7 @@
 	counter #(
 	.COUNT_WIDTH(COUNT_WIDTH),
 	.MODULO(TM)) 
-	inst_counter (
+	flt_count_inst (
 	.clk(flt_clk),
 	.count(flt_count));
 
@@ -346,17 +346,18 @@
 	so there is little reason to add more registers*/
 	wire signed [DWSAMP_SUM_WIDTH-1:0] dws_sum_con [SRC_DSP_NR:0]; //+1 because of beg and end, ex: ---DSP---DSP---DSP--- || note: 3 DSPs and 4 wires
 	wire signed [DWSAMP_DATA_WIDTH-1:0] dws_sample_con [SRC_DSP_NR:0]; //same as above
+	wire signed [SRC_COEF_WIDTH-1 : 0] dws_coef_crr [SRC_DSP_NR];
 	//starting pipeline values
 	assign dws_sample_con[0] = dws_in;
 	assign dws_sum_con[0] = 0;
 
 	
 	/*-----------------------------------------------------------*/
-	/*Generating upsampler taps (DSP blocks + shifting registers)*/
+	/*Generating downsampler taps (DSP blocks + shifting registers)*/
 	/*-----------------------------------------------------------*/
 
 
-	/*----------------Fir taps---------------*/
+	/*----------------Downsampler taps---------------*/
 	generate
 		for(genvar k = 0; k < SRC_DSP_NR; k = k + 1) begin
 			firtap #(
@@ -365,7 +366,7 @@
 			.OUTW(DWSAMP_SUM_WIDTH),
 			.SAMPLE_SHIFT(DSP_SHIFT+TM),
 			.SUM_SHIFT(DSP_SHIFT)
-			) inst_upsamp_tap(
+			) dws_tap_inst(
 			.clk(flt_clk),
 			.inX(dws_sample_con[k]),
 			.outX(dws_sample_con[k+1]),
@@ -384,25 +385,23 @@
 	wire [COUNT_WIDTH-1:0] dws_coef_count_con [SRC_DSP_NR + 1];
 		assign dws_coef_count_con[0] = dws_coef_count;
 
-	wire signed [SRC_COEF_WIDTH-1 : 0] dws_coef_crr [SRC_DSP_NR];
-
 	generate
-		for(genvar l = 0; l < SRC_DSP_NR; l = l+1) begin
+		for(genvar s = 0; s < SRC_DSP_NR; s = s+1) begin
 			coef_multplx #(
 			.COEFW(SRC_COEF_WIDTH),
 			.AW(BRAM_ADDR_WIDTH),
 			.TM(TM),
 			.CW(COUNT_WIDTH),
 			.COUNT_SHIFT(DSP_SHIFT) //should be equal to min(SAMPLE_SHIFT, SUM_SHIFT)
-			) inst_upsamp_coef_multplx(
+			) dws_coef_multplx_inst(
 			.clkw(S_AXI_ACLK),
 			.clkr(flt_clk),
-			.counter_in(dws_coef_count_con[l]),
-			.counter_out(dws_coef_count_con[l+1]),
+			.counter_in(dws_coef_count_con[s]),
+			.counter_out(dws_coef_count_con[s+1]),
 			.coef_write(src_coef_datain),
 			.coef_write_addr(axi_bram_addr),
-			.coef_write_en(dws_bram_en[l]),
-			.coef_out(dws_coef_crr[l])
+			.coef_write_en(dws_bram_en[s]),
+			.coef_out(dws_coef_crr[s])
 			);
 		end
 	endgenerate
@@ -412,7 +411,7 @@
 	localparam MULTTOOUT_LATENCY = 2;
 	localparam DWS_ENDACC_LATENCY = COEF_MULTPLX_LATENCY + MULTTOOUT_LATENCY - DSP_SHIFT;
 	shiftby #(.BY(DWS_ENDACC_LATENCY), .WIDTH(COUNT_WIDTH))
-	shift_dws_endacc_count
+	dws_endacc_count_shift
 	(.in(dws_coef_count_con[SRC_DSP_NR]), .out(dws_endacc_count), .clk(flt_clk));
 
 	wire signed [DWSAMP_SUM_WIDTH-1:0] dws_endacc_in;
@@ -425,7 +424,7 @@
 	.COUNT_WIDTH(COUNT_WIDTH),
 	.DATA_WIDTH(DWSAMP_SUM_WIDTH)	
 	) 
-	inst_sum_multplx (
+	dws_endacc_multplx_inst (
 	.count(dws_endacc_count),
 	.in(0),
 	.loop(dws_endacc_out),
@@ -436,7 +435,7 @@
 	ADDSUB_MACRO #(
 	.DEVICE("7SERIES"),
 	.LATENCY(1),//0-2
-	.WIDTH(XW)
+	.WIDTH(DWSAMP_SUM_WIDTH)
 	// Input / output bus width, 1-48
 	) dws_endacc_inst (
 	.RESULT(dws_endacc_out),
@@ -445,7 +444,7 @@
 	.B(dws_endacc_loop),
 	.CARRYIN(1'b0),
 	.CE(1'b1),
-	.CLK(clk),
+	.CLK(flt_clk),
 	.RST(1'b0)
 	);
 
@@ -467,7 +466,7 @@
 	wire [COUNT_WIDTH-1:0] fir_coef_count;
 	assign fir_coef_count = flt_count;
 	wire [COUNT_WIDTH-1:0] fir_sample_count;
-	shiftby #(.BY(COEF_MULTPLX_LATENCY), .WIDTH(COUNT_WIDTH)) shift_count_origin
+	shiftby #(.BY(COEF_MULTPLX_LATENCY), .WIDTH(COUNT_WIDTH)) fir_sample_count_shift
 	(.in(fir_coef_count), .out(fir_sample_count), .clk(flt_clk));
 
 	wire [COUNT_WIDTH-1:0] fir_coef_count_con [FIR_DSP_NR + 1];
@@ -489,11 +488,11 @@
 	localparam LOOP_FEEDBACK_SYNC = TM + 1 - ((2*FIR_DSP_NR)%TM);
 
 	shiftby #(.BY(LOOP_FEEDBACK_SYNC), .WIDTH(FIR_DATA_WIDTH))
-	shift_data_loop
+	fir_sample_loop_sync
 	(.in(fir_sample_con[FIR_DSP_NR]), .out(fir_sample_loopend), .clk(flt_clk));
 
 	shiftby #(.BY(LOOP_FEEDBACK_SYNC), .WIDTH(FIR_SUM_WIDTH))
-	shift_sum_loop
+	fir_sum_loop_sync
 	(.in(fir_sum_con[FIR_DSP_NR]), .out(fir_sum_loopend), .clk(flt_clk));
 
 	/*---...and samples multiplexing...---*/
@@ -502,7 +501,7 @@
 	.COUNT_WIDTH(COUNT_WIDTH),
 	.DATA_WIDTH(FIR_DATA_WIDTH)	
 	) 
-	inst_in_multplx (
+	fir_in_multplx_inst (
 	.count(fir_sample_count),
 	.in(fir_in),
 	.loop(fir_sample_loopend),
@@ -515,14 +514,14 @@
 	// to first summation in fir block (so fresh sample would contribute to fresh 0 sum)
 	wire [COUNT_WIDTH-1:0] fir_sum_count;
 	shiftby #(.BY(DSP_PIPELINE_DIFF), .WIDTH(COUNT_WIDTH))
-	shift_sum_count 
+	fir_sum_count_shift 
 	(.in(fir_sample_count), .out(fir_sum_count), .clk(flt_clk));
 
 	loop_multplx #(
 	.COUNT_WIDTH(COUNT_WIDTH),
 	.DATA_WIDTH(FIR_SUM_WIDTH)	
 	) 
-	inst_sum_multplx (
+	fir_sum_multplx_inst (
 	.count(fir_sum_count),
 	.in(0),
 	.loop(fir_sum_loopend),
@@ -545,9 +544,9 @@
 			.XW(FIR_DATA_WIDTH),
 			.COEFW(FIR_COEF_WIDTH),
 			.OUTW(FIR_SUM_WIDTH),
-			.SAMPLE_SHIFT(2+TM),
-			.SUM_SHIFT(2)
-			) inst_tap(
+			.SAMPLE_SHIFT(DSP_SHIFT+TM),
+			.SUM_SHIFT(DSP_SHIFT)
+			) fir_tap_inst(
 			.clk(flt_clk),
 			.inX(fir_sample_con[k]),
 			.outX(fir_sample_con[k+1]),
@@ -567,8 +566,8 @@
 			.AW(BRAM_ADDR_WIDTH),
 			.TM(TM),
 			.CW(COUNT_WIDTH),
-			.COUNT_SHIFT(2) //should be equal to min(SAMPLE_SHIFT, SUM_SHIFT)
-			) inst_fir_coef_multplx(
+			.COUNT_SHIFT(DSP_SHIFT) //should be equal to min(SAMPLE_SHIFT, SUM_SHIFT)
+			) fir_coef_multplx_inst(
 			.clkw(S_AXI_ACLK),
 			.clkr(flt_clk),
 			.counter_in(fir_coef_count_con[l]),
@@ -584,6 +583,8 @@
 
 	/*---FIR output---*/
 
+	reg signed [FIR_SUM_WIDTH-1:0] fir_out;
+
 	always @(posedge flt_clk) begin
 		if(fir_sum_count == 0)
 			fir_out <= fir_sum_loopend;//[FIR_SUM_WIDTH-1: FIR_SUM_WIDTH - UPSAMP_DATA_WIDTH];
@@ -592,10 +593,13 @@
 	/*------------------------------------------------------------*/
 	/*-------------------------UPSAMPLER--------------------------*/
 	/*------------------------------------------------------------*/
-	
+
+	wire [COUNT_WIDTH-1:0] ups_coef_count;
+	assign ups_coef_count = flt_count;
+
 	wire [COUNT_WIDTH-1:0] ups_sample_count;
 	shiftby #(.BY(COEF_MULTPLX_LATENCY-1), .WIDTH(COUNT_WIDTH)) //-1 because of synchronous ups_in assignment
-	shift_ups_count_origin
+	ups_sample_count_shift
 	(.in(ups_coef_count), .out(ups_sample_count), .clk(flt_clk));
 
 	reg signed [UPSAMP_DATA_WIDTH-1:0] ups_in;
@@ -609,6 +613,7 @@
 	so there is little reason to add more registers*/
 	wire signed [UPSAMP_SUM_WIDTH-1:0] ups_sum_con [SRC_DSP_NR:0]; //+1 because of beg and end, ex: ---DSP---DSP---DSP--- || note: 3 DSPs and 4 wires
 	wire signed [UPSAMP_DATA_WIDTH-1:0] ups_sample_con [SRC_DSP_NR:0]; //same as above
+	wire signed [SRC_COEF_WIDTH-1 : 0] ups_coef_crr [SRC_DSP_NR];
 	//starting pipeline values
 	assign ups_sample_con[0] = ups_in;
 	assign ups_sum_con[0] = 0;
@@ -619,16 +624,17 @@
 	/*-----------------------------------------------------------*/
 
 
-	/*----------------Fir taps---------------*/
+
+	/*----------------Upsampler taps---------------*/
 	generate
 		for(genvar k = 0; k < SRC_DSP_NR; k = k + 1) begin
 			firtap #(
 			.XW(UPSAMP_DATA_WIDTH),
 			.COEFW(SRC_COEF_WIDTH),
 			.OUTW(UPSAMP_SUM_WIDTH),
-			.SAMPLE_SHIFT(2+TM),
-			.SUM_SHIFT(2)
-			) inst_upsamp_tap(
+			.SAMPLE_SHIFT(DSP_SHIFT+TM),
+			.SUM_SHIFT(DSP_SHIFT)
+			) ups_tap_inst(
 			.clk(flt_clk),
 			.inX(ups_sample_con[k]),
 			.outX(ups_sample_con[k+1]),
@@ -641,38 +647,34 @@
 	/*--------------------------------------*/
 
 	/*---Coefficients' multiplexing---*/
-	wire [COUNT_WIDTH-1:0] ups_coef_count;
-		assign ups_coef_count = flt_count;
 
 	wire [COUNT_WIDTH-1:0] ups_coef_count_con [SRC_DSP_NR + 1];
 		assign ups_coef_count_con[0] = ups_coef_count;
 
-	wire signed [SRC_COEF_WIDTH-1 : 0] ups_coef_crr [SRC_DSP_NR];
-
 	generate
-		for(genvar l = 0; l < SRC_DSP_NR; l = l+1) begin
+		for(genvar t = 0; t < SRC_DSP_NR; t = t+1) begin
 			coef_multplx #(
 			.COEFW(SRC_COEF_WIDTH),
 			.AW(BRAM_ADDR_WIDTH),
 			.TM(TM),
 			.CW(COUNT_WIDTH),
-			.COUNT_SHIFT(2) //should be equal to min(SAMPLE_SHIFT, SUM_SHIFT)
-			) inst_upsamp_coef_multplx(
+			.COUNT_SHIFT(DSP_SHIFT) //should be equal to min(SAMPLE_SHIFT, SUM_SHIFT)
+			) ups_coef_multplx_inst(
 			.clkw(S_AXI_ACLK),
 			.clkr(flt_clk),
-			.counter_in(ups_coef_count_con[l]),
-			.counter_out(ups_coef_count_con[l+1]),
+			.counter_in(ups_coef_count_con[t]),
+			.counter_out(ups_coef_count_con[t+1]),
 			.coef_write(src_coef_datain),
 			.coef_write_addr(axi_bram_addr),
-			.coef_write_en(ups_bram_en[l]),
-			.coef_out(ups_coef_crr[l])
+			.coef_write_en(ups_bram_en[t]),
+			.coef_out(ups_coef_crr[t])
 			);
 		end
 	endgenerate
 
 	/*---Upsampler output---*/
-	wire signed [OUTPUT_DATA_WIDTH-1:0] ups_out;
-	assign ups_out = ups_sum_con[SRC_DSP_NR]; //[UPSAMP_SUM_WIDTH-1: UPSAMP_SUM_WIDTH - OUTPUT_DATA_WIDTH]
+	wire signed [UPSAMP_SUM_WIDTH-1:0] ups_out;
+	assign ups_out = ups_sum_con[SRC_DSP_NR]; 
 
 
 	/*------------------------------------------------------------*/
@@ -684,8 +686,8 @@
 	begin
 		case (axi_switches[SWITCH_FIR_EN])
 			1'b0	:	flt_out = flt_in; //may cause overload if flt_in is wider than flt_out
-			1'b1	:	fir_out = ups_out[UPSAMP_SUM_WIDTH-1: UPSAMP_SUM_WIDTH - OUTPUT_DATA_WIDTH];
-			default	:	fir_out = 0;
+			1'b1	:	flt_out = ups_out[UPSAMP_SUM_WIDTH-1: UPSAMP_SUM_WIDTH - OUTPUT_DATA_WIDTH];
+			default	:	flt_out = 0;
 		endcase
 	end
 	/*-----------------------*/
