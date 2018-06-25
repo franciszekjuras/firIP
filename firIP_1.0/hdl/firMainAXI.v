@@ -728,19 +728,19 @@
 	reg fir_snap; 
 	xpm_cdc_single fir_snap_cdc (
 		.src_clk(S_AXI_ACLK),
-		.src_in(switches[SWITCH_FIR_SNAP]),
-		.dest_clk(fir_clk),
+		.src_in(axi_switches[SWITCH_FIR_SNAP]),
+		.dest_clk(flt_clk),
 		.dest_out(fir_snap)
 	);
 	reg fir_snap2;
-	always @(posedge fir_clk) begin
+	always @(posedge flt_clk) begin
 		fir_snap2 <= fir_snap;
 	end
 	assign start_count = fir_snap & (~fir_snap2);
 
 
 	localparam MAX_SAMP_ADDR = DB*(1<<DAW);
-	always @(posedge fir_clk) begin
+	always @(posedge flt_clk) begin
 		case(dstate)
 			IDLE: if(start_count) begin
 				dstate <= RUN;
@@ -771,11 +771,11 @@
 	endgenerate
 
 	reg [DAW-1:0] d_wraddr;
-	always @(posedge fir_clk)
+	always @(posedge flt_clk)
 		d_wraddr <= d_count[DAW-1:0];
 
 	reg [INPUT_DATA_WIDTH-1:0]sample_in;
-	always @(posedge fir_clk) begin
+	always @(posedge flt_clk) begin
 		case(debug_source[2:0])
 			3'b000: sample_in <= upsamp_in;
 			3'b001: sample_in <= upsampler_out;
@@ -806,7 +806,7 @@
 		.RST(1'b0),
 		.WE(4'b1111),
 		.WRADDR(d_wraddr),
-		.WRCLK(fir_clk),
+		.WRCLK(flt_clk),
 		.WREN(d_enable[g])
 		);
 	end
