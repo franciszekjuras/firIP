@@ -84,9 +84,10 @@
 	localparam SWITCH_FIR_EN = 1;
 	localparam SWITCH_FIR_SNAP = 5;
 
-
-	localparam DAW = 11;
-	localparam DB = 20; //number of brams sample collection uses
+	localparam DSS = 3; //debug simultanous samples (add/delete generete loops if changing + add debug_source axi wiring + sample<nr>_in)
+	localparam DAW = 10;
+	localparam DW = 32;
+	localparam DB = 5; //number of brams sample collection uses (per sample source)
 	localparam DCW = $clog2(DB)+DAW;
 
 	integer idx;
@@ -146,8 +147,9 @@
 
 /*20*/    reg [C_S_AXI_DATA_WIDTH-1 : 0] axi_switches;
 /*21*/    reg [C_S_AXI_DATA_WIDTH-1 : 0] fir_coef_crrnr;
-/*21*/    reg [C_S_AXI_DATA_WIDTH-1 : 0] crr_debug_block;
-/*22*/    reg [C_S_AXI_DATA_WIDTH-1 : 0] debug_source;
+
+/*24*/    reg [C_S_AXI_DATA_WIDTH-1 : 0] crr_debug_block;
+/*25:25+DSS*/	reg [C_S_AXI_DATA_WIDTH-1 : 0] debug_source[DSS];
 
 	/*Dozen of boring AXI4-lite procedures*/
 	always @( posedge S_AXI_ACLK ) begin
@@ -213,8 +215,11 @@
 			case(axi_awaddr)
 				20: axi_switches <= S_AXI_WDATA;
 				21: fir_coef_crrnr <= S_AXI_WDATA;
-				22: crr_debug_block <= S_AXI_WDATA;
-				23: debug_source <= S_AXI_WDATA;
+
+				24: crr_debug_block <= S_AXI_WDATA;
+				25: debug_source[0] <= S_AXI_WDATA;
+				26: debug_source[1] <= S_AXI_WDATA;
+				27: debug_source[2] <= S_AXI_WDATA;
 			endcase
 		end else begin
 			for(idx = 0; idx < FIR_DSP_NR; idx = idx + 1) begin
@@ -304,8 +309,11 @@
 
 			20 : reg_data_out = axi_switches;
 			21 : reg_data_out = fir_coef_crrnr;
-			22 : reg_data_out = crr_debug_block;
-			23 : reg_data_out = debug_source;
+
+			24 : reg_data_out = crr_debug_block;
+			25 : reg_data_out = debug_source[0];
+			26 : reg_data_out = debug_source[1];
+			27 : reg_data_out = debug_source[2];
 
 			default : reg_data_out = 0;
 			endcase
@@ -332,7 +340,7 @@
 	/*++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++*/
 
 	//LEDS
-	assign leds_out[6:0] = switches[6:0];
+	assign axi_leds[6:0] = axi_switches[6:0];
 
 	localparam DSP_SHIFT = 2; //time shift between dsp blocks
 	localparam COEF_MULTPLX_LATENCY = 2;
@@ -720,10 +728,10 @@
 	reg d_enablea[DB];
 	reg d_enableb;
 	wire d_enable[DB];
-	wire signed [INPUT_DATA_WIDTH-1:0] d_out[DB];
-	reg signed [INPUT_DATA_WIDTH-1:0] d_readout;
+	wire signed [DW-1:0] d_out[DSS*DB];
+	reg signed [DW-1:0] d_readout;
 
-	assign leds_out[7] = dstate;
+	assign axi_leds[7] = dstate;
 
 	reg fir_snap; 
 	xpm_cdc_single fir_snap_cdc (
@@ -774,12 +782,57 @@
 	always @(posedge flt_clk)
 		d_wraddr <= d_count[DAW-1:0];
 
-	reg [INPUT_DATA_WIDTH-1:0]sample_in;
+	reg [DW-1:0]sample1_in;
 	always @(posedge flt_clk) begin
-		case(debug_source[2:0])
-			3'b000: sample_in <= upsamp_in;
-			3'b001: sample_in <= upsampler_out;
-			default: sample_in <= 0;
+		case(debug_source[0][3:0])
+			4'h0: sample1_in <= flt_in;
+			4'h1: sample1_in <= dws_coef_crr[0];
+			4'h2: sample1_in <= dws_endacc_in;
+			4'h3: sample1_in <= dws_endacc_loop;
+			4'h4: sample1_in <= dws_endacc_out;
+			4'h5: sample1_in <= dws_out;
+			4'h6: sample1_in <= fir_in;
+			4'h7: sample1_in <= fir_out;
+			4'h8: sample1_in <= ups_in;
+			4'h9: sample1_in <= ups_out;
+			4'hA: sample1_in <= flt_out;
+			default: sample1_in <= 0;
+		endcase
+	end
+
+	reg [DW-1:0]sample2_in;
+	always @(posedge flt_clk) begin
+		case(debug_source[1][3:0])
+			4'h0: sample2_in <= flt_in;
+			4'h1: sample2_in <= dws_coef_crr[0];
+			4'h2: sample2_in <= dws_endacc_in;
+			4'h3: sample2_in <= dws_endacc_loop;
+			4'h4: sample2_in <= dws_endacc_out;
+			4'h5: sample2_in <= dws_out;
+			4'h6: sample2_in <= fir_in;
+			4'h7: sample2_in <= fir_out;
+			4'h8: sample2_in <= ups_in;
+			4'h9: sample2_in <= ups_out;
+			4'hA: sample2_in <= flt_out;
+			default: sample2_in <= 0;
+		endcase
+	end
+
+	reg [DW-1:0]sample3_in;
+	always @(posedge flt_clk) begin
+		case(debug_source[2][3:0])
+			4'h0: sample3_in <= flt_in;
+			4'h1: sample3_in <= dws_coef_crr[0];
+			4'h2: sample3_in <= dws_endacc_in;
+			4'h3: sample3_in <= dws_endacc_loop;
+			4'h4: sample3_in <= dws_endacc_out;
+			4'h5: sample3_in <= dws_out;
+			4'h6: sample3_in <= fir_in;
+			4'h7: sample3_in <= fir_out;
+			4'h8: sample3_in <= ups_in;
+			4'h9: sample3_in <= ups_out;
+			4'hA: sample3_in <= flt_out;
+			default: sample3_in <= 0;
 		endcase
 	end
 
@@ -789,8 +842,8 @@
 		BRAM_SDP_MACRO #(
 		.BRAM_SIZE("36Kb"), 
 		.DEVICE("7SERIES"),
-		.WRITE_WIDTH(INPUT_DATA_WIDTH),
-		.READ_WIDTH(INPUT_DATA_WIDTH),
+		.WRITE_WIDTH(DW),
+		.READ_WIDTH(DW),
 		// Valid values are 1-72 (37-72 only valid when BRAM_SIZE="36Kb")
 		.DO_REG(0),
 		.INIT_FILE ("NONE"),
@@ -798,7 +851,63 @@
 		.WRITE_MODE("WRITE_FIRST")
 		) samples_bram_inst (
 		.DO(d_out[g]),
-		.DI(sample_in),
+		.DI(sample1_in),
+		.RDADDR(d_bram_addr), // Input read address, width defined by read port depth
+		.RDCLK(S_AXI_ACLK),
+		.RDEN(1'b1),
+		.REGCE(1'b0),
+		.RST(1'b0),
+		.WE(4'b1111),
+		.WRADDR(d_wraddr),
+		.WRCLK(flt_clk),
+		.WREN(d_enable[g])
+		);
+	end
+	endgenerate
+
+	generate
+	for(genvar g = 0; g < DB; g = g+1) begin
+		BRAM_SDP_MACRO #(
+		.BRAM_SIZE("36Kb"), 
+		.DEVICE("7SERIES"),
+		.WRITE_WIDTH(DW),
+		.READ_WIDTH(DW),
+		// Valid values are 1-72 (37-72 only valid when BRAM_SIZE="36Kb")
+		.DO_REG(0),
+		.INIT_FILE ("NONE"),
+		.SIM_COLLISION_CHECK ("ALL"),
+		.WRITE_MODE("WRITE_FIRST")
+		) samples_bram_inst (
+		.DO(d_out[g+DB]),
+		.DI(sample2_in),
+		.RDADDR(d_bram_addr), // Input read address, width defined by read port depth
+		.RDCLK(S_AXI_ACLK),
+		.RDEN(1'b1),
+		.REGCE(1'b0),
+		.RST(1'b0),
+		.WE(4'b1111),
+		.WRADDR(d_wraddr),
+		.WRCLK(flt_clk),
+		.WREN(d_enable[g])
+		);
+	end
+	endgenerate
+
+	generate
+	for(genvar g = 0; g < DB; g = g+1) begin
+		BRAM_SDP_MACRO #(
+		.BRAM_SIZE("36Kb"), 
+		.DEVICE("7SERIES"),
+		.WRITE_WIDTH(DW),
+		.READ_WIDTH(DW),
+		// Valid values are 1-72 (37-72 only valid when BRAM_SIZE="36Kb")
+		.DO_REG(0),
+		.INIT_FILE ("NONE"),
+		.SIM_COLLISION_CHECK ("ALL"),
+		.WRITE_MODE("WRITE_FIRST")
+		) samples_bram_inst (
+		.DO(d_out[g+(2*DB)]),
+		.DI(sample3_in),
 		.RDADDR(d_bram_addr), // Input read address, width defined by read port depth
 		.RDCLK(S_AXI_ACLK),
 		.RDEN(1'b1),
@@ -814,7 +923,7 @@
 
 	always @(*) begin
 		d_readout = 0;
-		for(int j = 0; j < DB; j = j+1) begin
+		for(int j = 0; j < DSS*DB; j = j+1) begin
 			if(crr_debug_block == j)
 				d_readout = d_out[j];
 		end
