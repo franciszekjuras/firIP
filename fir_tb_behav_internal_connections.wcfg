@@ -11,18 +11,18 @@
       </db_ref>
    </db_ref_list>
    <zoom_setting>
-      <ZoomStartTime time="9338831850fs"></ZoomStartTime>
-      <ZoomEndTime time="9396154344fs"></ZoomEndTime>
-      <Cursor1Time time="9676036000fs"></Cursor1Time>
+      <ZoomStartTime time="3560000000fs"></ZoomStartTime>
+      <ZoomEndTime time="3800000001fs"></ZoomEndTime>
+      <Cursor1Time time="3775078000fs"></Cursor1Time>
    </zoom_setting>
    <column_width_setting>
       <NameColumnWidth column_width="175"></NameColumnWidth>
-      <ValueColumnWidth column_width="114"></ValueColumnWidth>
+      <ValueColumnWidth column_width="106"></ValueColumnWidth>
    </column_width_setting>
    <WVObjectSize size="53" />
    <wvobject type="array" fp_name="/fir_tb/coef_t">
-      <obj_property name="ElementShortName">coef_t[17:0]</obj_property>
-      <obj_property name="ObjectShortName">coef_t[17:0]</obj_property>
+      <obj_property name="ElementShortName">coef_t[31:0]</obj_property>
+      <obj_property name="ObjectShortName">coef_t[31:0]</obj_property>
    </wvobject>
    <wvobject type="array" fp_name="/fir_tb/out">
       <obj_property name="ElementShortName">out[31:0]</obj_property>
@@ -140,10 +140,6 @@
       <obj_property name="ElementShortName">FIR_DATA_WIDTH[31:0]</obj_property>
       <obj_property name="ObjectShortName">FIR_DATA_WIDTH[31:0]</obj_property>
    </wvobject>
-   <wvobject type="array" fp_name="/fir_tb/FIR_COEF_WIDTH">
-      <obj_property name="ElementShortName">FIR_COEF_WIDTH[31:0]</obj_property>
-      <obj_property name="ObjectShortName">FIR_COEF_WIDTH[31:0]</obj_property>
-   </wvobject>
    <wvobject type="array" fp_name="/fir_tb/FIR_COEF_MAG">
       <obj_property name="ElementShortName">FIR_COEF_MAG[31:0]</obj_property>
       <obj_property name="ObjectShortName">FIR_COEF_MAG[31:0]</obj_property>
@@ -195,28 +191,65 @@
       <obj_property name="ObjectShortName">fir_bram_en[0:3]</obj_property>
    </wvobject>
    <wvobject type="array" fp_name="/fir_tb/firMainAXI_inst/fir_coef_crr">
-      <obj_property name="ElementShortName">fir_coef_crr[0:3][16:0]</obj_property>
-      <obj_property name="ObjectShortName">fir_coef_crr[0:3][16:0]</obj_property>
+      <obj_property name="ElementShortName">fir_coef_crr[0:3][15:0]</obj_property>
+      <obj_property name="ObjectShortName">fir_coef_crr[0:3][15:0]</obj_property>
       <obj_property name="Radix">SIGNEDDECRADIX</obj_property>
+      <obj_property name="isExpanded"></obj_property>
+      <wvobject type="array" fp_name="/fir_tb/firMainAXI_inst/fir_coef_crr[0]">
+         <obj_property name="ElementShortName">[0][15:0]</obj_property>
+         <obj_property name="ObjectShortName">[0][15:0]</obj_property>
+         <obj_property name="Radix">SIGNEDDECRADIX</obj_property>
+      </wvobject>
+      <wvobject type="array" fp_name="/fir_tb/firMainAXI_inst/fir_coef_crr[1]">
+         <obj_property name="ElementShortName">[1][15:0]</obj_property>
+         <obj_property name="ObjectShortName">[1][15:0]</obj_property>
+         <obj_property name="Radix">SIGNEDDECRADIX</obj_property>
+      </wvobject>
+      <wvobject type="array" fp_name="/fir_tb/firMainAXI_inst/fir_coef_crr[2]">
+         <obj_property name="ElementShortName">[2][15:0]</obj_property>
+         <obj_property name="ObjectShortName">[2][15:0]</obj_property>
+         <obj_property name="Radix">SIGNEDDECRADIX</obj_property>
+      </wvobject>
+      <wvobject type="array" fp_name="/fir_tb/firMainAXI_inst/fir_coef_crr[3]">
+         <obj_property name="ElementShortName">[3][15:0]</obj_property>
+         <obj_property name="ObjectShortName">[3][15:0]</obj_property>
+      </wvobject>
+      <wvobject type="array" fp_name="/fir_tb/firMainAXI_inst/fir_coef_crr[0]">
+         <obj_property name="ElementShortName">[0][15:0]</obj_property>
+         <obj_property name="ObjectShortName">[0][15:0]</obj_property>
+      </wvobject>
+      <wvobject type="array" fp_name="/fir_tb/firMainAXI_inst/fir_coef_crr[1]">
+         <obj_property name="ElementShortName">[1][15:0]</obj_property>
+         <obj_property name="ObjectShortName">[1][15:0]</obj_property>
+      </wvobject>
+      <wvobject type="array" fp_name="/fir_tb/firMainAXI_inst/fir_coef_crr[2]">
+         <obj_property name="ElementShortName">[2][15:0]</obj_property>
+         <obj_property name="ObjectShortName">[2][15:0]</obj_property>
+      </wvobject>
+      <wvobject type="array" fp_name="/fir_tb/firMainAXI_inst/fir_coef_crr[3]">
+         <obj_property name="ElementShortName">[3][15:0]</obj_property>
+         <obj_property name="ObjectShortName">[3][15:0]</obj_property>
+      </wvobject>
    </wvobject>
    <wvobject type="array" fp_name="/fir_tb/firMainAXI_inst/dws_endacc_in">
-      <obj_property name="ElementShortName">dws_endacc_in[29:0]</obj_property>
-      <obj_property name="ObjectShortName">dws_endacc_in[29:0]</obj_property>
+      <obj_property name="ElementShortName">dws_endacc_in[13:0]</obj_property>
+      <obj_property name="ObjectShortName">dws_endacc_in[13:0]</obj_property>
       <obj_property name="Radix">SIGNEDDECRADIX</obj_property>
+      <obj_property name="isExpanded"></obj_property>
    </wvobject>
    <wvobject type="array" fp_name="/fir_tb/firMainAXI_inst/dws_endacc_loop">
-      <obj_property name="ElementShortName">dws_endacc_loop[29:0]</obj_property>
-      <obj_property name="ObjectShortName">dws_endacc_loop[29:0]</obj_property>
+      <obj_property name="ElementShortName">dws_endacc_loop[13:0]</obj_property>
+      <obj_property name="ObjectShortName">dws_endacc_loop[13:0]</obj_property>
       <obj_property name="Radix">SIGNEDDECRADIX</obj_property>
    </wvobject>
    <wvobject type="array" fp_name="/fir_tb/firMainAXI_inst/dws_endacc_out">
-      <obj_property name="ElementShortName">dws_endacc_out[29:0]</obj_property>
-      <obj_property name="ObjectShortName">dws_endacc_out[29:0]</obj_property>
+      <obj_property name="ElementShortName">dws_endacc_out[13:0]</obj_property>
+      <obj_property name="ObjectShortName">dws_endacc_out[13:0]</obj_property>
       <obj_property name="Radix">SIGNEDDECRADIX</obj_property>
    </wvobject>
    <wvobject type="array" fp_name="/fir_tb/firMainAXI_inst/dws_out">
-      <obj_property name="ElementShortName">dws_out[29:0]</obj_property>
-      <obj_property name="ObjectShortName">dws_out[29:0]</obj_property>
+      <obj_property name="ElementShortName">dws_out[13:0]</obj_property>
+      <obj_property name="ObjectShortName">dws_out[13:0]</obj_property>
       <obj_property name="Radix">SIGNEDDECRADIX</obj_property>
    </wvobject>
    <wvobject type="array" fp_name="/fir_tb/firMainAXI_inst/fir_in">
@@ -225,13 +258,13 @@
       <obj_property name="Radix">SIGNEDDECRADIX</obj_property>
    </wvobject>
    <wvobject type="array" fp_name="/fir_tb/firMainAXI_inst/fir_sum_loopend">
-      <obj_property name="ElementShortName">fir_sum_loopend[29:0]</obj_property>
-      <obj_property name="ObjectShortName">fir_sum_loopend[29:0]</obj_property>
+      <obj_property name="ElementShortName">fir_sum_loopend[13:0]</obj_property>
+      <obj_property name="ObjectShortName">fir_sum_loopend[13:0]</obj_property>
       <obj_property name="Radix">SIGNEDDECRADIX</obj_property>
    </wvobject>
    <wvobject type="array" fp_name="/fir_tb/firMainAXI_inst/fir_out">
-      <obj_property name="ElementShortName">fir_out[29:0]</obj_property>
-      <obj_property name="ObjectShortName">fir_out[29:0]</obj_property>
+      <obj_property name="ElementShortName">fir_out[13:0]</obj_property>
+      <obj_property name="ObjectShortName">fir_out[13:0]</obj_property>
       <obj_property name="Radix">SIGNEDDECRADIX</obj_property>
    </wvobject>
    <wvobject type="array" fp_name="/fir_tb/firMainAXI_inst/ups_in">
@@ -240,8 +273,33 @@
       <obj_property name="Radix">SIGNEDDECRADIX</obj_property>
    </wvobject>
    <wvobject type="array" fp_name="/fir_tb/firMainAXI_inst/ups_out">
-      <obj_property name="ElementShortName">ups_out[29:0]</obj_property>
-      <obj_property name="ObjectShortName">ups_out[29:0]</obj_property>
+      <obj_property name="ElementShortName">ups_out[13:0]</obj_property>
+      <obj_property name="ObjectShortName">ups_out[13:0]</obj_property>
       <obj_property name="Radix">SIGNEDDECRADIX</obj_property>
+   </wvobject>
+   <wvobject type="array" fp_name="/fir_tb/firMainAXI_inst/dws_coef_crr">
+      <obj_property name="ElementShortName">dws_coef_crr[0:3][15:0]</obj_property>
+      <obj_property name="ObjectShortName">dws_coef_crr[0:3][15:0]</obj_property>
+      <obj_property name="isExpanded"></obj_property>
+      <wvobject type="array" fp_name="/fir_tb/firMainAXI_inst/dws_coef_crr[0]">
+         <obj_property name="ElementShortName">[0][15:0]</obj_property>
+         <obj_property name="ObjectShortName">[0][15:0]</obj_property>
+         <obj_property name="Radix">SIGNEDDECRADIX</obj_property>
+      </wvobject>
+      <wvobject type="array" fp_name="/fir_tb/firMainAXI_inst/dws_coef_crr[1]">
+         <obj_property name="ElementShortName">[1][15:0]</obj_property>
+         <obj_property name="ObjectShortName">[1][15:0]</obj_property>
+         <obj_property name="Radix">SIGNEDDECRADIX</obj_property>
+      </wvobject>
+      <wvobject type="array" fp_name="/fir_tb/firMainAXI_inst/dws_coef_crr[2]">
+         <obj_property name="ElementShortName">[2][15:0]</obj_property>
+         <obj_property name="ObjectShortName">[2][15:0]</obj_property>
+         <obj_property name="Radix">SIGNEDDECRADIX</obj_property>
+      </wvobject>
+      <wvobject type="array" fp_name="/fir_tb/firMainAXI_inst/dws_coef_crr[3]">
+         <obj_property name="ElementShortName">[3][15:0]</obj_property>
+         <obj_property name="ObjectShortName">[3][15:0]</obj_property>
+         <obj_property name="Radix">SIGNEDDECRADIX</obj_property>
+      </wvobject>
    </wvobject>
 </wave_config>
