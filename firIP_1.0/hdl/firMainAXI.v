@@ -344,6 +344,8 @@
 
 	localparam DSP_SHIFT = 2; //time shift between dsp blocks
 	localparam COEF_MULTPLX_LATENCY = 2;
+	localparam MULT_IN_LATENCY = 1;
+	localparam ACC_IN_LATENCY = 1;
 
 	/*------------------------------------------------------------*/
 	/*------------------------FIR COUNTER-------------------------*/
@@ -436,8 +438,7 @@
 
 	/*---Downsampler output---*/
 	wire [COUNT_WIDTH-1:0] dws_endacc_count;
-	localparam MULTTOOUT_LATENCY = 2;
-	localparam DWS_ENDACC_LATENCY = COEF_MULTPLX_LATENCY + MULTTOOUT_LATENCY - DSP_SHIFT;
+	localparam DWS_ENDACC_LATENCY = COEF_MULTPLX_LATENCY + MULT_IN_LATENCY; //(3)
 	shiftby #(.BY(DWS_ENDACC_LATENCY), .WIDTH(COUNT_WIDTH))
 	dws_endacc_count_shift
 	(.in(dws_coef_count_con[SRC_DSP_NR]), .out(dws_endacc_count), .clk(flt_clk));
@@ -513,7 +514,7 @@
 	/*---------------------------------------*/
 
 	/*----Loop shift (synchronization)----*/
-	localparam LOOP_FEEDBACK_SYNC = TM + 1 - ((2*FIR_DSP_NR)%TM);
+	localparam LOOP_FEEDBACK_SYNC = TM + 1 - ((DSP_SHIFT*FIR_DSP_NR)%TM);
 
 	shiftby #(.BY(LOOP_FEEDBACK_SYNC), .WIDTH(FIR_DATA_WIDTH))
 	fir_sample_loop_sync
@@ -538,7 +539,7 @@
 
 	/*---...and sum multiplexing----------*/
 
-	localparam DSP_PIPELINE_DIFF = 1; // difference in registers from samples multiplexer
+	localparam DSP_PIPELINE_DIFF = MULT_IN_LATENCY; // difference in registers from samples multiplexer
 	// to first summation in fir block (so fresh sample would contribute to fresh 0 sum)
 	wire [COUNT_WIDTH-1:0] fir_sum_count;
 	shiftby #(.BY(DSP_PIPELINE_DIFF), .WIDTH(COUNT_WIDTH))
