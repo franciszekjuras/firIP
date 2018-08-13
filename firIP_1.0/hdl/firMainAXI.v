@@ -76,18 +76,19 @@
 	localparam FIR_DEBUG_OFFSET = 32;
 	//reverse order xD
 	localparam PROG_NAME = " RIF";
-	localparam PROG_VER = "01.3";
+	localparam PROG_VER = "11.3";
 	localparam PROG_STAT = "GBD ";
 
 	//Switches:
 	localparam SWITCH_CON_EST = 0;
 	localparam SWITCH_FIR_EN = 1;
 	localparam SWITCH_FIR_SNAP = 5;
+	localparam SWITCH_DEB_TM_RATIO = 6;
 
-	localparam DSS = 3; //debug simultanous samples (add/delete generete loops if changing + add debug_source axi wiring + sample<nr>_in)
+	localparam DSS = 2; //debug simultanous samples (add/delete generete loops if changing + add debug_source axi wiring + sample<nr>_in)
 	localparam DAW = 10;
 	localparam DW = 32;
-	localparam DB = 5; //number of brams sample collection uses (per sample source)
+	localparam DB = 10; //number of brams sample collection uses (per sample source)
 	localparam DCW = $clog2(DB)+DAW;
 
 	integer idx;
@@ -219,7 +220,7 @@
 				24: crr_debug_block <= S_AXI_WDATA;
 				25: debug_source[0] <= S_AXI_WDATA;
 				26: debug_source[1] <= S_AXI_WDATA;
-				27: debug_source[2] <= S_AXI_WDATA;
+				//27: debug_source[2] <= S_AXI_WDATA;
 			endcase
 		end else begin
 			for(idx = 0; idx < FIR_DSP_NR; idx = idx + 1) begin
@@ -313,7 +314,7 @@
 			24 : reg_data_out = crr_debug_block;
 			25 : reg_data_out = debug_source[0];
 			26 : reg_data_out = debug_source[1];
-			27 : reg_data_out = debug_source[2];
+			//27 : reg_data_out = debug_source[2];
 
 			default : reg_data_out = 0;
 			endcase
@@ -747,6 +748,16 @@
 	end
 	assign start_count = fir_snap & (~fir_snap2);
 
+	reg [COUNT_WIDTH-1:0] d_count_dis;
+
+	always @(*) begin
+		if(axi_switches[SWITCH_DEB_TM_RATIO]) begin
+			d_count_dis = flt_count;
+		end else begin
+			d_count_dis = 0;
+		end
+	end
+
 
 	localparam MAX_SAMP_ADDR = DB*(1<<DAW);
 	always @(posedge flt_clk) begin
@@ -759,7 +770,7 @@
 				dstate <= IDLE;
 				d_enableb <= 1'b0;
 				d_count<=0;
-			end else begin
+			end else if(d_count_dis == 0) begin
 				d_count <= d_count + 1;
 			end
 		endcase // dstate
@@ -819,23 +830,23 @@
 		endcase
 	end
 
-	reg [DW-1:0]sample3_in;
-	always @(posedge flt_clk) begin
-		case(debug_source[2][3:0])
-			4'h0: sample3_in <= flt_in;
-			4'h1: sample3_in <= dws_coef_crr[0];
-			4'h2: sample3_in <= dws_endacc_in;
-			4'h3: sample3_in <= dws_endacc_loop;
-			4'h4: sample3_in <= dws_endacc_out;
-			4'h5: sample3_in <= dws_out;
-			4'h6: sample3_in <= fir_in;
-			4'h7: sample3_in <= fir_out;
-			4'h8: sample3_in <= ups_in;
-			4'h9: sample3_in <= ups_out;
-			4'hA: sample3_in <= flt_out;
-			default: sample3_in <= 0;
-		endcase
-	end
+	// reg [DW-1:0]sample3_in;
+	// always @(posedge flt_clk) begin
+	// 	case(debug_source[2][3:0])
+	// 		4'h0: sample3_in <= flt_in;
+	// 		4'h1: sample3_in <= dws_coef_crr[0];
+	// 		4'h2: sample3_in <= dws_endacc_in;
+	// 		4'h3: sample3_in <= dws_endacc_loop;
+	// 		4'h4: sample3_in <= dws_endacc_out;
+	// 		4'h5: sample3_in <= dws_out;
+	// 		4'h6: sample3_in <= fir_in;
+	// 		4'h7: sample3_in <= fir_out;
+	// 		4'h8: sample3_in <= ups_in;
+	// 		4'h9: sample3_in <= ups_out;
+	// 		4'hA: sample3_in <= flt_out;
+	// 		default: sample3_in <= 0;
+	// 	endcase
+	// end
 
 
 	generate
@@ -894,33 +905,33 @@
 	end
 	endgenerate
 
-	generate
-	for(genvar g = 0; g < DB; g = g+1) begin
-		BRAM_SDP_MACRO #(
-		.BRAM_SIZE("36Kb"), 
-		.DEVICE("7SERIES"),
-		.WRITE_WIDTH(DW),
-		.READ_WIDTH(DW),
-		// Valid values are 1-72 (37-72 only valid when BRAM_SIZE="36Kb")
-		.DO_REG(0),
-		.INIT_FILE ("NONE"),
-		.SIM_COLLISION_CHECK ("ALL"),
-		.WRITE_MODE("WRITE_FIRST")
-		) samples_bram_inst (
-		.DO(d_out[g+(2*DB)]),
-		.DI(sample3_in),
-		.RDADDR(d_bram_addr), // Input read address, width defined by read port depth
-		.RDCLK(S_AXI_ACLK),
-		.RDEN(1'b1),
-		.REGCE(1'b0),
-		.RST(1'b0),
-		.WE(4'b1111),
-		.WRADDR(d_wraddr),
-		.WRCLK(flt_clk),
-		.WREN(d_enable[g])
-		);
-	end
-	endgenerate
+	// generate
+	// for(genvar g = 0; g < DB; g = g+1) begin
+	// 	BRAM_SDP_MACRO #(
+	// 	.BRAM_SIZE("36Kb"), 
+	// 	.DEVICE("7SERIES"),
+	// 	.WRITE_WIDTH(DW),
+	// 	.READ_WIDTH(DW),
+	// 	// Valid values are 1-72 (37-72 only valid when BRAM_SIZE="36Kb")
+	// 	.DO_REG(0),
+	// 	.INIT_FILE ("NONE"),
+	// 	.SIM_COLLISION_CHECK ("ALL"),
+	// 	.WRITE_MODE("WRITE_FIRST")
+	// 	) samples_bram_inst (
+	// 	.DO(d_out[g+(2*DB)]),
+	// 	.DI(sample3_in),
+	// 	.RDADDR(d_bram_addr), // Input read address, width defined by read port depth
+	// 	.RDCLK(S_AXI_ACLK),
+	// 	.RDEN(1'b1),
+	// 	.REGCE(1'b0),
+	// 	.RST(1'b0),
+	// 	.WE(4'b1111),
+	// 	.WRADDR(d_wraddr),
+	// 	.WRCLK(flt_clk),
+	// 	.WREN(d_enable[g])
+	// 	);
+	// end
+	// endgenerate
 
 	always @(*) begin
 		d_readout = 0;
