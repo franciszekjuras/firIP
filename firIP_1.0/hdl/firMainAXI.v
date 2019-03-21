@@ -65,16 +65,16 @@
 	localparam SRC_COEFS_NR = TM * SRC_DSP_NR;
 
 	localparam ADDR_LSB = (C_S_AXI_DATA_WIDTH/32) + 1;
-	localparam BRAM_ADDR_WIDTH = 7;
-	localparam DSP_ADDR_WIDTH = C_S_AXI_ADDR_WIDTH - BRAM_ADDR_WIDTH - ADDR_LSB; //7
+	localparam BRAM_ADDR_WIDTH = 9;
+	localparam DSP_ADDR_WIDTH = C_S_AXI_ADDR_WIDTH - BRAM_ADDR_WIDTH - ADDR_LSB; //22-9-2=11
 	// Addresses' bases in 32/64 bit addressing
 	localparam FIR_COEFS_BASE = 1;
-	localparam UPSAMP_COEFS_BASE = 81;
-	localparam DWSAMP_COEFS_BASE = 101;
-	localparam FIR_DEBUG_OFFSET = 32;
+	localparam UPSAMP_COEFS_BASE = 256;
+	localparam DWSAMP_COEFS_BASE = 320;
+	//localparam FIR_DEBUG_OFFSET = 32;
 	//reverse order xD
 	localparam PROG_NAME = " RIF";
-	localparam PROG_VER = "11.3";
+	localparam PROG_VER = "02.3";
 	localparam PROG_STAT = "VED ";
 
 	//Switches:
@@ -271,12 +271,12 @@
 
 		4 : reg_data_out = FIR_COEFS_NR;
 		5 : reg_data_out = SRC_COEFS_NR;
-		6 : reg_data_out = SRC_COEFS_NR;
+		//6 : reg_data_out = SRC_COEFS_NR;
 
 		8 : reg_data_out = TM;
 		9 : reg_data_out = FIR_DSP_NR;
 		10: reg_data_out = SRC_DSP_NR; //ups
-		11: reg_data_out = SRC_DSP_NR; //dws
+		//11: reg_data_out = SRC_DSP_NR; //dws
 
 		12: reg_data_out = FIR_COEF_MAG;
 		13: reg_data_out = SRC_COEF_MAG;
@@ -284,6 +284,7 @@
 		16: reg_data_out = FIR_COEFS_BASE;
 		17: reg_data_out = UPSAMP_COEFS_BASE;
 		18: reg_data_out = DWSAMP_COEFS_BASE;
+		19: reg_data_out = BRAM_ADDR_WIDTH;
 
 		20 : reg_data_out = axi_switches;
 		21 : reg_data_out = fir_coef_crrnr;
