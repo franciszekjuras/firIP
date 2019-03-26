@@ -71,7 +71,7 @@
 	localparam FIR_COEFS_BASE = 1;
 	localparam UPSAMP_COEFS_BASE = 256;
 	localparam DWSAMP_COEFS_BASE = 320;
-	//localparam FIR_DEBUG_OFFSET = 32;
+	localparam FIR_DEBUG_OFFSET = 32;
 	//reverse order xD
 	localparam PROG_NAME = " RIF";
 	localparam PROG_VER = "02.3";
@@ -136,6 +136,10 @@
 
 /*20*/    reg [C_S_AXI_DATA_WIDTH-1 : 0] axi_switches;
 /*21*/    reg [C_S_AXI_DATA_WIDTH-1 : 0] fir_coef_crrnr;
+/*23*/    reg [C_S_AXI_DATA_WIDTH-1 : 0] dbg_axi_write_address;
+/*24*/    reg [C_S_AXI_DATA_WIDTH-1 : 0] dbg_axi_write_data;
+
+	reg signed [FIR_COEF_WIDTH-1 : 0] dbg_fir_coefs [TM];
 
 	/*Dozen of boring AXI4-lite procedures*/
 	always @( posedge S_AXI_ACLK ) begin
@@ -183,6 +187,8 @@
 
 	always @( posedge S_AXI_ACLK ) begin: write_data
 		if (reg_wren & S_AXI_ARESETN) begin
+			dbg_axi_write_address <= axi_awaddr;
+			dbg_axi_write_data <= S_AXI_WDATA;
 			for(idx = 0; idx < FIR_DSP_NR; idx = idx + 1) begin
 				if(idx + FIR_COEFS_BASE == axi_dsp_addr)
 					fir_bram_en[idx] <= 1'b1;
@@ -288,14 +294,18 @@
 
 		20 : reg_data_out = axi_switches;
 		21 : reg_data_out = fir_coef_crrnr;
+		22 : reg_data_out = dbg_axi_write_address;
+		23 : reg_data_out = dbg_axi_write_data;
+
+		24 : reg_data_out = FIR_DEBUG_OFFSET;
 
 		default : reg_data_out = 0;
 		endcase
-		// for(idx = 0; idx < (DEBUG_LENGTH*DEBUG_DEPTH); idx = idx + 1) begin
-		// 	if(idx + FIR_OFFSET_DEBUG == axi_araddr) begin
-		// 		reg_data_out = debug_block[idx]; //WARN:sign bit might not be shifted properly
-		// 	end
-		// end	   
+		for(idx = 0; idx < TM; idx = idx + 1) begin
+			if(idx + FIR_DEBUG_OFFSET == axi_araddr) begin
+				reg_data_out = dbg_fir_coefs[idx];
+			end
+		end	   
 	end
 
 	always @( posedge S_AXI_ACLK ) begin
@@ -581,6 +591,14 @@
 			);
 		end
 	endgenerate
+
+	always @(posedge flt_clk) begin
+		for(idx = 0; idx < TM; idx = idx + 1) begin
+			if(idx == fir_coef_count_con[0]) begin
+				dbg_fir_coefs[idx] <= fir_coef_crr[0];
+			end
+		end
+	end
 	/*---------------------------------*/
 
 	/*---FIR output---*/
