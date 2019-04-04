@@ -74,7 +74,7 @@
 	localparam FIR_DEBUG_OFFSET = 32;
 	//reverse order xD
 	localparam PROG_NAME = " RIF";
-	localparam PROG_VER = "02.3";
+	localparam PROG_VER = "12.3";
 	localparam PROG_STAT = "VED ";
 
 	//Switches:
@@ -139,7 +139,7 @@
 /*23*/    reg [C_S_AXI_DATA_WIDTH-1 : 0] dbg_axi_write_address;
 /*24*/    reg [C_S_AXI_DATA_WIDTH-1 : 0] dbg_axi_write_data;
 
-	reg signed [FIR_COEF_WIDTH-1 : 0] dbg_fir_coefs [TM];
+	//reg signed [FIR_COEF_WIDTH-1 : 0] dbg_fir_coefs [1*TM]; //debug
 
 	/*Dozen of boring AXI4-lite procedures*/
 	always @( posedge S_AXI_ACLK ) begin
@@ -301,11 +301,12 @@
 
 		default : reg_data_out = 0;
 		endcase
-		for(idx = 0; idx < TM; idx = idx + 1) begin
-			if(idx + FIR_DEBUG_OFFSET == axi_araddr) begin
-				reg_data_out = dbg_fir_coefs[idx];
-			end
-		end	   
+		// // debug
+		// for(idx = 0; idx < (1*TM); idx = idx + 1) begin
+		// 	if(idx + FIR_DEBUG_OFFSET == axi_araddr) begin
+		// 		reg_data_out = dbg_fir_coefs[idx];
+		// 	end
+		// end	   
 	end
 
 	always @( posedge S_AXI_ACLK ) begin
@@ -592,13 +593,6 @@
 		end
 	endgenerate
 
-	always @(posedge flt_clk) begin
-		for(idx = 0; idx < TM; idx = idx + 1) begin
-			if(idx == fir_coef_count_con[0]) begin
-				dbg_fir_coefs[idx] <= fir_coef_crr[0];
-			end
-		end
-	end
 	/*---------------------------------*/
 
 	/*---FIR output---*/
@@ -711,5 +705,15 @@
 		endcase
 	end
 	/*-----------------------*/
+
+	// //debug
+
+	// always @(posedge flt_clk) begin
+	// 	for(idx = 0; idx < TM; idx = idx + 1) begin
+	// 		if(axi_switches[SWITCH_FIR_SNAP] && (idx == fir_sum_count)) begin
+	// 			dbg_fir_coefs[idx] <= fir_sum_loopend;
+	// 		end
+	// 	end
+	// end
 
 endmodule

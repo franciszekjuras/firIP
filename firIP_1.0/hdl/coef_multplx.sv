@@ -13,8 +13,8 @@ module coef_multplx
 	output wire signed [COEFW-1:0] coef_out
     );
 	
-	localparam AWEXT = 9-AW;
-	localparam AREXT = 9-CW;
+	localparam AWEXT = 10-AW;
+	localparam AREXT = 10-CW;
 	
 	BRAM_SDP_MACRO #(
 	.BRAM_SIZE("18Kb"), 
